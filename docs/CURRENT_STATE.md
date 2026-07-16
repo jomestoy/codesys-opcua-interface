@@ -73,6 +73,11 @@ Se agregaron:
 - estimador gravimetrico offline por regresion lineal;
 - PI lento offline con banda muerta, rate limit y congelacion;
 - wrapper OPC UA real con `asyncua` opcional y resolucion de namespace por URI;
+- mapa OPC UA Hito 2 sin indices de namespace fijos;
+- conector primario/secundario que escribe solo al activo;
+- bloqueo por doble activo;
+- suscripciones simuladas;
+- simulador OPC UA compatible con el contrato del conector;
 - estructura base de plataforma principal;
 - migracion SQL inicial;
 - seed de 200 columnas;
@@ -81,10 +86,10 @@ Se agregaron:
 - reverse proxy inicial;
 - codigo Structured Text base para CODESYS.
 
-Pruebas ejecutadas:
+Pruebas ejecutadas despues de Hito 2:
 
 ```text
-10 passed
+17 passed
 ```
 
 Demo ejecutada:

@@ -27,7 +27,15 @@ Entregables:
 - modelo de comandos: implementado offline;
 - cliente asincronico con `asyncua`: wrapper preparado, requiere dependencia y runtime;
 - simulador de endpoint primario/secundario: implementado;
-- tests unitarios de modelo de comandos y failover simulado: implementados.
+- tests unitarios de modelo de comandos y failover simulado: implementados;
+- mapa de simbolos OPC UA: implementado;
+- seleccion de endpoint activo: implementada;
+- bloqueo de doble activo: implementado;
+- suscripcion simulada: implementada.
+
+Validacion:
+
+- `codesys-opcua-interface`: 17 tests passing.
 
 Pendiente:
 
@@ -35,7 +43,8 @@ Pendiente:
 - certificados;
 - trust list;
 - suscripciones reales;
-- escritura OPC UA real al buzon.
+- escritura OPC UA real al buzon;
+- confirmacion real de `ST_ColumnCommand`.
 
 ## Hito 3: CODESYS
 

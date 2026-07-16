@@ -13,7 +13,7 @@ python -m pytest -q
 Resultado:
 
 ```text
-10 passed
+17 passed
 ```
 
 Cobertura funcional validada:
@@ -27,6 +27,12 @@ Cobertura funcional validada:
 - rechazo de setpoint fuera de rango;
 - failover simulado activo/standby;
 - NodeId con namespace resuelto.
+- mapa de simbolos OPC UA sin namespace index fijo;
+- endpoint activo primario/secundario;
+- bloqueo por doble activo;
+- failover simulado;
+- escritura solo al activo;
+- suscripcion simulada.
 
 ## column-gateway
 

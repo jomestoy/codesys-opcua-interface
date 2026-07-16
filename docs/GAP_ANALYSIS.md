@@ -17,12 +17,13 @@ Fecha de auditoria: 2026-07-15.
   - diagnostico local;
   - comandos nominales de red y dispositivos.
 - Tests unitarios actuales:
-  - `codesys-opcua-interface`: 10 tests.
+  - `codesys-opcua-interface`: 17 tests.
   - `column-gateway`: 7 tests.
 - Estimador matematico offline de flujo por regresion lineal.
 - PI lento offline.
 - Modelo de comando con TTL, sequence e idempotencia.
 - Simulador de redundancia primario/secundario.
+- Conector OPC UA offline/simulado con seleccion de activo y bloqueo por doble activo.
 - Driver simulado del gateway con lectura/escritura en memoria.
 - Parser de referencia LP7516.
 
@@ -35,6 +36,8 @@ Fecha de auditoria: 2026-07-15.
 - Matematica de control.
 - Buzon de comandos.
 - Redundancia simulada.
+- Suscripciones simuladas.
+- Wrapper `asyncua` preparado pero no conectado a runtime real.
 - Structured Text fuente no compilado en CODESYS.
 
 ## Que esta simulado
@@ -43,6 +46,7 @@ Fecha de auditoria: 2026-07-15.
 - 200 columnas para demo offline.
 - Flujo gravimetrico por muestras sinteticas.
 - Confirmacion de comandos por CODESYS simulado.
+- Servidor/cliente OPC UA simulado a nivel de contrato Python, no socket OPC UA real.
 - Driver de campo `simulated`.
 - Lecturas de dispositivos simulados.
 
@@ -59,10 +63,8 @@ Fecha de auditoria: 2026-07-15.
 
 - Instalar dependencia opcional `asyncua`.
 - Validar cliente OPC UA asincronico con runtime real.
-- Dependencia `asyncua` validada.
 - Conexion real.
 - Reconexion.
-- Resolucion de namespace por URI.
 - Certificados.
 - Trust list.
 - `Basic256Sha256` con `SignAndEncrypt`.
@@ -70,11 +72,10 @@ Fecha de auditoria: 2026-07-15.
 - Lectura y escritura controlada.
 - Calidad OPC UA.
 - Timestamp de origen y servidor.
-- Buzon de comandos.
-- Confirmacion de comandos.
-- TTL, sequence ID e idempotencia.
-- Monitoreo de endpoint primario/secundario.
-- Failover simulado.
+- Buzon de comandos contra tipos OPC UA reales.
+- Confirmacion de comandos contra runtime CODESYS real.
+- Monitoreo real de endpoint primario/secundario.
+- Failover CODESYS real.
 
 ## Que falta para la plataforma web
 
@@ -91,11 +92,11 @@ Fecha de auditoria: 2026-07-15.
 
 ## Que falta para CODESYS
 
-- Codigo Structured Text.
-- Bloques funcionales `FB_Column`, maquina de estados, estimador gravimetrico y PI lento.
-- Estructuras `ST_*`.
-- GVLs.
-- Modelo de 200 columnas.
+- Compilar el codigo Structured Text en CODESYS Development System.
+- Validar bloques funcionales `FB_Column`, maquina de estados, estimador gravimetrico y PI lento en runtime real.
+- Validar estructuras `ST_*`.
+- Validar GVLs y simbolos exportados.
+- Validar modelo de 200 columnas en CODESYS.
 - Proyecto PLCopen XML importable.
 - Simulacion IEC.
 - Tareas documentadas.
