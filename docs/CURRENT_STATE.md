@@ -128,6 +128,12 @@ Pruebas ejecutadas despues de Hito 8:
 45 passed
 ```
 
+Pruebas ejecutadas despues de Hito 9:
+
+```text
+48 passed
+```
+
 Demo ejecutada:
 
 ```text
@@ -190,6 +196,15 @@ Estado Hito 8:
 - comandos de push pendientes quedaron documentados en `docs/GIT_PUSH_PENDING.md`;
 - el empaquetado real del gateway vive en el repositorio `column-gateway`;
 - no se validaron Docker, dpkg ni systemd reales en este ambiente.
+
+Estado Hito 9:
+
+- se agrego `scripts/load_test.py` para carga simulada de 200 columnas;
+- se agrego `scripts/security_audit.py` para detectar secretos, I/O real activado y malas configuraciones;
+- `make test-load` y `make test-security` generan reportes en `outputs/`;
+- se agrego fuente Playwright en `apps/web/tests/e2e.spec.ts`;
+- se agrego `docs/HITO9_TEST_REPORT.md`;
+- la validacion sigue siendo offline/simulada, sin CODESYS/hardware real.
 
 ### Gateway
 

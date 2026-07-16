@@ -208,14 +208,37 @@ Pendiente:
 
 ## Hito 9: pruebas
 
+Estado: completado localmente en modo offline/simulacion. Pendiente ejecucion contra runtime, Docker, navegador y hardware reales.
+
 Entregables:
 
-- unitarias;
-- integracion;
-- UI;
-- carga 200 columnas;
-- failover;
-- seguridad.
+- unitarias existentes ampliadas;
+- integracion API/OPC UA simulado;
+- fuente Playwright para UI;
+- carga simulada de 200 columnas;
+- failover simulado CODESYS A/B;
+- auditoria de seguridad offline;
+- smoke/security gateway.
+
+Validacion:
+
+- `codesys-opcua-interface`: 48 tests passing.
+- `column-gateway`: 18 tests passing.
+- load test plataforma: 200 columnas, 50 comandos, 0 fallas, failover A/B.
+- security audit plataforma: passed.
+- smoke test gateway: passed.
+- security audit gateway: passed.
+
+Pendiente:
+
+- Playwright contra navegador real;
+- Docker Compose real;
+- OPC UA real con certificados;
+- CODESYS real;
+- paquetes `.deb` instalados con `dpkg`;
+- hardware Modbus/RS232;
+- prueba de carga prolongada;
+- FAT/SAT.
 
 ## Regla de avance
 

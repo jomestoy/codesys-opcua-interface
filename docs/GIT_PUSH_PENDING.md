@@ -22,6 +22,8 @@ Commit local pendiente conocido:
 
 Si se agregan nuevos commits antes del push, el mismo comando subira toda la cola local.
 
+Commits Hito 9 tambien quedan pendientes si existen localmente antes de ejecutar el push.
+
 ## Gateway `column-gateway`
 
 Ruta:

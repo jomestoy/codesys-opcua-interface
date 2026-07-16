@@ -1,4 +1,4 @@
-.PHONY: setup demo demo-offline api web stop reset-demo test test-integration test-ui test-load lint build package-gateway screenshots backup restore
+.PHONY: setup demo demo-offline api web stop reset-demo test test-integration test-ui test-load test-security lint build package-gateway screenshots backup restore
 
 PYTHON ?= python
 COMPOSE ?= docker compose -f docker-compose.demo.yml
@@ -35,10 +35,13 @@ test-integration:
 	$(PYTHON) -m pytest -q tests
 
 test-ui:
-	@echo "Fuente React/Vite disponible en apps/web. Playwright queda pendiente para Hito 9."
+	cd apps/web && npm run test:e2e
 
 test-load:
-	$(PYTHON) -m codesys_opcua_interface.demo --columns 200 --ticks 30
+	$(PYTHON) scripts/load_test.py --columns 200 --commands 200 --report outputs/load/load-report.json
+
+test-security:
+	$(PYTHON) scripts/security_audit.py --report outputs/security/security-audit.json
 
 lint:
 	$(PYTHON) -m compileall codesys_opcua_interface services tests scripts

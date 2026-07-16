@@ -13,7 +13,7 @@ python -m pytest -q
 Resultado:
 
 ```text
-45 passed
+48 passed
 ```
 
 Cobertura funcional validada:
@@ -50,6 +50,7 @@ Cobertura funcional validada:
 - alarmas Hito 5: reglas configurables, evaluacion, historial, reconocimiento, limpieza y exportacion.
 - integraciones Hito 7: Grafana/Node-RED sin autoridad de control;
 - empaquetado Hito 8: Docker Compose demo, backup/restore seguro y queries Grafana alineadas al esquema.
+- Hito 9: load test simulado, security audit y fuente Playwright.
 
 ## column-gateway
 
@@ -62,7 +63,7 @@ python -m pytest -q
 Resultado:
 
 ```text
-16 passed
+18 passed
 ```
 
 Cobertura funcional validada:
@@ -75,6 +76,7 @@ Cobertura funcional validada:
 - parser de referencia LP7516.
 - paquetes Hito 8: tarballs y `.deb` estructurales amd64/arm64;
 - CLI `version` y `update` con validacion de argumentos.
+- Hito 9: smoke test CLI y security audit gateway.
 
 ## No validado en este ambiente
 

@@ -2,7 +2,7 @@
 
 Plataforma operacional para control de columnas con CODESYS como autoridad final, comunicacion OPC UA segura y gateway Linux separado para campo.
 
-Estado actual: prototipo offline integrado hasta Hito 8.
+Estado actual: prototipo offline integrado hasta Hito 9.
 
 ## Principios de seguridad
 
@@ -31,6 +31,7 @@ Estado actual: prototipo offline integrado hasta Hito 8.
 - Docker Compose demo con Web, API, PostgreSQL, Grafana, Node-RED y reverse proxy.
 - Backup/restore seguro de configuracion demo.
 - Empaquetado gateway delegado al repositorio `column-gateway`.
+- Pruebas Hito 9: carga simulada, auditoria de seguridad y fuente Playwright.
 
 ## Ejecutar pruebas
 
@@ -42,7 +43,7 @@ python -m compileall codesys_opcua_interface services tests
 Resultado ultimo validado:
 
 ```text
-45 passed
+48 passed
 ```
 
 ## Ejecutar API demo
@@ -110,4 +111,5 @@ Ver detalles en:
 - `docs/IMPLEMENTATION_PLAN.md`
 - `docs/WEB_PLATFORM.md`
 - `docs/GRAFANA_NODE_RED.md`
+- `docs/HITO9_TEST_REPORT.md`
 - `codesys-control/docs/CODESYS_CONTROL.md`
