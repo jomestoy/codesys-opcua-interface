@@ -1,0 +1,818 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plcopenSource project="codesys-opcua-interface" profile="preliminary-st-source">
+  <metadata>
+    <note>Preliminary PLCopen-style source export. Validate/import in CODESYS Development System before using with a real runtime.</note>
+  </metadata>
+  <declarations>
+    <type name="E_ColumnState" />
+    <type name="E_CommandStatus" />
+    <type name="ST_ColumnAlarm" />
+    <type name="ST_ColumnBank" />
+    <type name="ST_ColumnCommand" />
+    <type name="ST_ColumnConfig" />
+    <type name="ST_ColumnRuntime" />
+    <type name="ST_ColumnStatus" />
+    <type name="ST_DataQuality" />
+    <type name="ST_GatewayStatus" />
+    <type name="ST_OpcuaRuntime" />
+    <type name="ST_PumpCommand" />
+    <type name="ST_RecipeParameters" />
+    <type name="ST_ScaleReading" />
+    <type name="ST_SimulationRuntime" />
+    <type name="ST_SystemRuntime" />
+    <functionBlock name="FB_Aeration" />
+    <functionBlock name="FB_Alarm" />
+    <functionBlock name="FB_CampaignRuntime" />
+    <functionBlock name="FB_Column" />
+    <functionBlock name="FB_ColumnStateMachine" />
+    <functionBlock name="FB_CommandMailbox" />
+    <functionBlock name="FB_DataQuality" />
+    <functionBlock name="FB_FailSafe" />
+    <functionBlock name="FB_GatewayHealth" />
+    <functionBlock name="FB_GravimetricFlowEstimator" />
+    <functionBlock name="FB_InputScale" />
+    <functionBlock name="FB_OutputScale" />
+    <functionBlock name="FB_Pump" />
+    <functionBlock name="FB_RecipeRuntime" />
+    <functionBlock name="FB_SlowPIController" />
+    <functionBlock name="FB_TemperatureController" />
+    <program name="PRG_ColumnControl" />
+    <program name="PRG_Simulation" />
+  </declarations>
+  <sources>
+    <source path="src/FunctionBlocks.st" language="st">FUNCTION_BLOCK FB_DataQuality
+VAR_INPUT
+    ValidInput : BOOL;
+    StableInput : BOOL;
+    QualityInput : REAL;
+END_VAR
+VAR_OUTPUT
+    Quality : ST_DataQuality;
+END_VAR
+Quality.Valid := ValidInput;
+Quality.Stable := StableInput;
+IF QualityInput &lt; 0.0 THEN
+    Quality.Quality := 0.0;
+ELSIF QualityInput &gt; 1.0 THEN
+    Quality.Quality := 1.0;
+ELSE
+    Quality.Quality := QualityInput;
+END_IF
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_InputScale
+VAR_INPUT
+    RawWeightKg : REAL;
+    Valid : BOOL;
+    Stable : BOOL;
+END_VAR
+VAR_OUTPUT
+    Reading : ST_ScaleReading;
+END_VAR
+Reading.WeightKg := RawWeightKg;
+Reading.Quality.Valid := Valid;
+Reading.Quality.Stable := Stable;
+Reading.Quality.Quality := SEL(Valid AND Stable, 0.0, 1.0);
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_OutputScale EXTENDS FB_InputScale
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_GravimetricFlowEstimator
+VAR_INPUT
+    Enable : BOOL;
+    Sample : ST_ScaleReading;
+    NowMs : ULINT;
+    WindowS : REAL := 120.0;
+    MinPoints : UINT := 8;
+    MaxStepKg : REAL := 50.0;
+END_VAR
+VAR_OUTPUT
+    FlowKgH : REAL;
+    Quality : REAL;
+    Frozen : BOOL;
+    ReasonCode : UINT;
+END_VAR
+VAR
+    Weights : ARRAY[1..120] OF REAL;
+    TimesS : ARRAY[1..120] OF REAL;
+    Count : UINT;
+    Index : UINT;
+    I : UINT;
+    MeanT : REAL;
+    MeanW : REAL;
+    Denom : REAL;
+    Slope : REAL;
+    LastWeight : REAL;
+END_VAR
+
+IF NOT Enable OR NOT Sample.Quality.Valid OR NOT Sample.Quality.Stable THEN
+    Frozen := TRUE;
+    ReasonCode := 10;
+    RETURN;
+END_IF
+
+IF Count &gt; 0 AND ABS(Sample.WeightKg - LastWeight) &gt; MaxStepKg THEN
+    Frozen := TRUE;
+    ReasonCode := 20; (* refill/outlier/tare/vessel change candidate *)
+    RETURN;
+END_IF
+
+Index := Index + 1;
+IF Index &gt; 120 THEN Index := 1; END_IF
+Weights[Index] := Sample.WeightKg;
+TimesS[Index] := ULINT_TO_REAL(NowMs) / 1000.0;
+LastWeight := Sample.WeightKg;
+IF Count &lt; 120 THEN Count := Count + 1; END_IF
+
+IF Count &lt; MinPoints THEN
+    Frozen := TRUE;
+    ReasonCode := 30;
+    RETURN;
+END_IF
+
+MeanT := 0.0;
+MeanW := 0.0;
+FOR I := 1 TO Count DO
+    MeanT := MeanT + TimesS[I];
+    MeanW := MeanW + Weights[I];
+END_FOR
+MeanT := MeanT / UINT_TO_REAL(Count);
+MeanW := MeanW / UINT_TO_REAL(Count);
+
+Denom := 0.0;
+Slope := 0.0;
+FOR I := 1 TO Count DO
+    Denom := Denom + (TimesS[I] - MeanT) * (TimesS[I] - MeanT);
+    Slope := Slope + (TimesS[I] - MeanT) * (Weights[I] - MeanW);
+END_FOR
+
+IF Denom &lt;= 0.0 THEN
+    Frozen := TRUE;
+    ReasonCode := 40;
+    RETURN;
+END_IF
+
+Slope := Slope / Denom;
+FlowKgH := MAX(0.0, -Slope * 3600.0);
+Quality := 1.0;
+Frozen := FALSE;
+ReasonCode := 0;
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_SlowPIController
+VAR_INPUT
+    Enable : BOOL;
+    SetpointKgH : REAL;
+    MeasuredKgH : REAL;
+    DtS : REAL;
+    Freeze : BOOL;
+    Kp : REAL := 0.08;
+    Ki : REAL := 0.01;
+    DeadbandPct : REAL := 0.03;
+    MaxOutputPct : REAL := 100.0;
+    MaxDeltaPct : REAL := 3.0;
+END_VAR
+VAR_OUTPUT
+    OutputPct : REAL;
+    IntegratorFrozen : BOOL;
+END_VAR
+VAR
+    Error : REAL;
+    Raw : REAL;
+    Delta : REAL;
+    Integral : REAL;
+END_VAR
+
+IF NOT Enable OR Freeze OR SetpointKgH &lt;= 0.0 THEN
+    IntegratorFrozen := TRUE;
+    RETURN;
+END_IF
+
+Error := SetpointKgH - MeasuredKgH;
+IF ABS(Error) / SetpointKgH &lt;= DeadbandPct THEN
+    IntegratorFrozen := FALSE;
+    RETURN;
+END_IF
+
+Integral := Integral + Ki * Error * DtS;
+Raw := Kp * Error + Integral;
+Raw := LIMIT(0.0, Raw, MaxOutputPct);
+Delta := LIMIT(-MaxDeltaPct, Raw - OutputPct, MaxDeltaPct);
+OutputPct := LIMIT(0.0, OutputPct + Delta, MaxOutputPct);
+IntegratorFrozen := FALSE;
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_Pump
+VAR_INPUT
+    Enable : BOOL;
+    RequestedPct : REAL;
+    SafeStop : BOOL;
+END_VAR
+VAR_OUTPUT
+    Command : ST_PumpCommand;
+END_VAR
+Command.Enable := Enable AND NOT SafeStop;
+Command.SafeStop := SafeStop;
+Command.OutputPct := SEL(Command.Enable, 0.0, LIMIT(0.0, RequestedPct, 100.0));
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_TemperatureController
+VAR_INPUT
+    Enable : BOOL;
+    PvC : REAL;
+    SpC : REAL;
+END_VAR
+VAR_OUTPUT
+    AlarmHigh : BOOL;
+END_VAR
+AlarmHigh := Enable AND PvC &gt; SpC + 5.0;
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_Aeration
+VAR_INPUT
+    Enable : BOOL;
+    InterlockOk : BOOL;
+END_VAR
+VAR_OUTPUT
+    ValveOpen : BOOL;
+END_VAR
+ValveOpen := Enable AND InterlockOk;
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_Alarm
+VAR_INPUT
+    ActiveInput : BOOL;
+    CodeInput : STRING[40];
+    MessageInput : STRING[120];
+    Ack : BOOL;
+END_VAR
+VAR_OUTPUT
+    Alarm : ST_ColumnAlarm;
+END_VAR
+IF ActiveInput THEN
+    Alarm.Active := TRUE;
+    Alarm.Code := CodeInput;
+    Alarm.Message := MessageInput;
+    Alarm.RequiresAck := TRUE;
+END_IF
+IF Ack THEN Alarm.Acked := TRUE; END_IF
+IF NOT ActiveInput AND Alarm.Acked THEN Alarm.Active := FALSE; END_IF
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_CommandMailbox
+VAR_INPUT
+    NowMs : ULINT;
+    Incoming : ST_ColumnCommand;
+    HasIncoming : BOOL;
+END_VAR
+VAR_OUTPUT
+    Current : ST_ColumnCommand;
+    HasPending : BOOL;
+END_VAR
+IF HasIncoming AND Incoming.ExpiresAtMs &gt; NowMs THEN
+    Current := Incoming;
+    Current.Status := Accepted;
+    HasPending := TRUE;
+ELSIF HasIncoming THEN
+    Current := Incoming;
+    Current.Status := Expired;
+    HasPending := FALSE;
+END_IF
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_GatewayHealth
+VAR_INPUT
+    NowMs : ULINT;
+    Status : ST_GatewayStatus;
+    TimeoutMs : ULINT := 5000;
+END_VAR
+VAR_OUTPUT
+    Healthy : BOOL;
+END_VAR
+Healthy := Status.Online AND (NowMs - Status.LastHeartbeatMs) &lt;= TimeoutMs AND NOT Status.SafeStateActive;
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_RecipeRuntime
+VAR_INPUT
+    Parameters : ST_RecipeParameters;
+END_VAR
+VAR_OUTPUT
+    ActiveSetpointKgH : REAL;
+END_VAR
+ActiveSetpointKgH := Parameters.FlowSetpointKgH;
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_CampaignRuntime
+VAR_INPUT
+    Enable : BOOL;
+END_VAR
+VAR_OUTPUT
+    Running : BOOL;
+END_VAR
+Running := Enable;
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_FailSafe
+VAR_INPUT
+    CriticalAlarm : BOOL;
+    GatewayHealthy : BOOL;
+    DataValid : BOOL;
+END_VAR
+VAR_OUTPUT
+    SafeStop : BOOL;
+END_VAR
+SafeStop := CriticalAlarm OR NOT GatewayHealthy OR NOT DataValid;
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_ColumnStateMachine
+VAR_INPUT
+    Enabled : BOOL;
+    Start : BOOL;
+    Pause : BOOL;
+    Stop : BOOL;
+    MaintenanceMode : BOOL;
+    AlarmActive : BOOL;
+END_VAR
+VAR_OUTPUT
+    State : E_ColumnState;
+END_VAR
+IF NOT Enabled THEN
+    State := OutOfService;
+ELSIF MaintenanceMode THEN
+    State := Maintenance;
+ELSIF AlarmActive THEN
+    State := Alarm;
+ELSIF Stop THEN
+    State := Available;
+ELSIF Pause THEN
+    State := Paused;
+ELSIF Start THEN
+    State := Running;
+ELSIF State = Offline THEN
+    State := Available;
+END_IF
+END_FUNCTION_BLOCK
+
+FUNCTION_BLOCK FB_Column
+VAR_INPUT
+    Config : ST_ColumnConfig;
+    NowMs : ULINT;
+    InputScale : ST_ScaleReading;
+    OutputScale : ST_ScaleReading;
+    Command : ST_ColumnCommand;
+    GatewayStatus : ST_GatewayStatus;
+END_VAR
+VAR_OUTPUT
+    Status : ST_ColumnStatus;
+    PumpCommand : ST_PumpCommand;
+END_VAR
+VAR
+    Estimator : FB_GravimetricFlowEstimator;
+    PI : FB_SlowPIController;
+    Pump : FB_Pump;
+    Gateway : FB_GatewayHealth;
+    FailSafe : FB_FailSafe;
+    StateMachine : FB_ColumnStateMachine;
+END_VAR
+
+Gateway(NowMs := NowMs, Status := GatewayStatus);
+Estimator(Enable := Config.Enabled, Sample := InputScale, NowMs := NowMs, WindowS := Config.FlowWindowS, MinPoints := Config.MinFlowPoints);
+FailSafe(CriticalAlarm := Status.Alarm.Active, GatewayHealthy := Gateway.Healthy, DataValid := InputScale.Quality.Valid);
+PI(Enable := Config.Enabled, SetpointKgH := Config.FlowSetpointKgH, MeasuredKgH := Estimator.FlowKgH, DtS := 30.0, Freeze := FailSafe.SafeStop OR Estimator.Frozen);
+Pump(Enable := Config.Enabled, RequestedPct := PI.OutputPct, SafeStop := FailSafe.SafeStop);
+StateMachine(Enabled := Config.Enabled, Start := Command.CommandType = 'start', Pause := Command.CommandType = 'pause', Stop := Command.CommandType = 'stop', MaintenanceMode := Command.CommandType = 'maintenance', AlarmActive := Status.Alarm.Active);
+
+Status.State := StateMachine.State;
+Status.InputScale := InputScale;
+Status.OutputScale := OutputScale;
+Status.FlowMeasuredKgH := Estimator.FlowKgH;
+Status.FlowQuality := Estimator.Quality;
+Status.PumpOutputPct := Pump.Command.OutputPct;
+Status.PIIntegratorFrozen := PI.IntegratorFrozen;
+Status.GatewayHealthy := Gateway.Healthy;
+PumpCommand := Pump.Command;
+END_FUNCTION_BLOCK
+</source>
+    <source path="src/GVL.st" language="st">VAR_GLOBAL RETAIN
+    (* System and redundancy status exposed through OPC UA.
+       REAL_IO_ENABLED is intentionally false by default. It must only be
+       enabled after API authorization, audited confirmation and hardware
+       validation outside this demo source set. *)
+    GVL_System : ST_SystemRuntime := (
+        Heartbeat := 0,
+        NowMs := 0,
+        ControllerId := 'CODESYS-A',
+        ControllerRole := 'primary',
+        IsActive := TRUE,
+        RedundancyHealthy := TRUE,
+        ApplicationVersion := '0.3.0-hito3-st',
+        ControlAuthority := 'codesys',
+        RealIoEnabled := FALSE
+    );
+END_VAR
+
+VAR_GLOBAL RETAIN
+    (* OPC UA command mailbox. Frontend/API writes requests here only through
+       the connector. Field outputs are never written directly from web/Grafana/Node-RED. *)
+    GVL_OPCUA : ST_OpcuaRuntime;
+END_VAR
+
+VAR_GLOBAL RETAIN
+    GVL_Recipes : ARRAY[1..50] OF ST_RecipeParameters;
+    GVL_Gateways : ARRAY[1..8] OF ST_GatewayStatus;
+    GVL_Columns : ST_ColumnBank;
+END_VAR
+
+VAR_GLOBAL
+    (* Function block instances stay outside retained data. *)
+    GVL_ColumnInstances : ARRAY[1..200] OF FB_Column;
+    GVL_Simulation : ST_SimulationRuntime := (
+        Enabled := TRUE,
+        Scenario := 'normal',
+        FaultColumnId := 0,
+        ForcePrimaryOffline := FALSE,
+        ForceGatewayOffline := FALSE,
+        ForceScaleOffline := FALSE,
+        ForceRefill := FALSE,
+        ForceTare := FALSE,
+        ForceCriticalAlarm := FALSE
+    );
+END_VAR
+</source>
+    <source path="src/PRG_ColumnControl.st" language="st">PROGRAM PRG_ColumnControl
+VAR
+    ColumnIndex : UINT;
+    InitDone : BOOL;
+    CommandForColumn : ST_ColumnCommand;
+    EmptyCommand : ST_ColumnCommand;
+    TargetColumnId : UINT;
+    AcceptCommand : BOOL;
+    RejectCommand : BOOL;
+END_VAR
+
+(* Main control program for the 200-column model.
+   Intended task: normal task, after fast watchdog/input refresh.
+   CODESYS remains final authority: commands are accepted only from the OPC UA
+   mailbox, checked here, then applied to the corresponding FB_Column. *)
+
+IF NOT InitDone THEN
+    FOR ColumnIndex := 1 TO 200 DO
+        GVL_Columns.Columns[ColumnIndex].Config.ColumnId := ColumnIndex;
+        GVL_Columns.Columns[ColumnIndex].Config.Enabled := TRUE;
+        GVL_Columns.Columns[ColumnIndex].Config.FlowSetpointKgH := 12.0;
+        GVL_Columns.Columns[ColumnIndex].Config.FlowWindowS := 120.0;
+        GVL_Columns.Columns[ColumnIndex].Config.MinFlowPoints := 8;
+        GVL_Columns.Columns[ColumnIndex].Config.MaxPumpOutputPct := 100.0;
+        GVL_Columns.Columns[ColumnIndex].Config.MaxOutputDeltaPct := 3.0;
+        GVL_Columns.Columns[ColumnIndex].Config.BriefLossTimeoutMs := 15000;
+        GVL_Columns.Columns[ColumnIndex].Config.ProlongedLossTimeoutMs := 60000;
+        GVL_Columns.Columns[ColumnIndex].InputScale.WeightKg := 1000.0;
+        GVL_Columns.Columns[ColumnIndex].InputScale.Quality.Valid := TRUE;
+        GVL_Columns.Columns[ColumnIndex].InputScale.Quality.Stable := TRUE;
+        GVL_Columns.Columns[ColumnIndex].InputScale.Quality.Quality := 1.0;
+        GVL_Columns.Columns[ColumnIndex].OutputScale.WeightKg := 0.0;
+        GVL_Columns.Columns[ColumnIndex].OutputScale.Quality.Valid := TRUE;
+        GVL_Columns.Columns[ColumnIndex].OutputScale.Quality.Stable := TRUE;
+        GVL_Columns.Columns[ColumnIndex].OutputScale.Quality.Quality := 1.0;
+        GVL_Columns.Columns[ColumnIndex].GatewayStatus.GatewayId := 'gateway-demo';
+        GVL_Columns.Columns[ColumnIndex].GatewayStatus.Online := TRUE;
+        GVL_Columns.Columns[ColumnIndex].GatewayStatus.Quality := 1.0;
+        GVL_Columns.Columns[ColumnIndex].Status.State := Available;
+    END_FOR
+    GVL_Recipes[1].RecipeId := 'REC-DEMO-001';
+    GVL_Recipes[1].FlowSetpointKgH := 12.0;
+    GVL_Recipes[1].TemperatureSetpointC := 25.0;
+    GVL_Recipes[1].AerationEnabled := TRUE;
+    GVL_Recipes[1].PIKp := 0.08;
+    GVL_Recipes[1].PIKi := 0.01;
+    InitDone := TRUE;
+END_IF
+
+GVL_System.Heartbeat := GVL_System.Heartbeat + 1;
+GVL_System.NowMs := GVL_System.NowMs + 100;
+GVL_System.ControlAuthority := 'codesys';
+
+AcceptCommand := FALSE;
+RejectCommand := FALSE;
+TargetColumnId := GVL_OPCUA.CommandMailbox.ColumnId;
+
+IF GVL_OPCUA.HasCommand AND GVL_OPCUA.CommandMailbox.Status = Pending THEN
+    IF NOT GVL_System.IsActive THEN
+        RejectCommand := TRUE;
+        GVL_OPCUA.CommandMailbox.Result := 'controlador no activo';
+    ELSIF GVL_OPCUA.CommandMailbox.ExpiresAtMs &lt;= GVL_System.NowMs THEN
+        GVL_OPCUA.CommandMailbox.Status := Expired;
+        RejectCommand := TRUE;
+        GVL_OPCUA.CommandMailbox.Result := 'comando expirado';
+    ELSIF TargetColumnId &lt; 1 OR TargetColumnId &gt; 200 THEN
+        RejectCommand := TRUE;
+        GVL_OPCUA.CommandMailbox.Result := 'columna fuera de rango';
+    ELSIF NOT GVL_Columns.Columns[TargetColumnId].Config.Enabled THEN
+        RejectCommand := TRUE;
+        GVL_OPCUA.CommandMailbox.Result := 'columna deshabilitada';
+    ELSE
+        AcceptCommand := TRUE;
+        GVL_OPCUA.CommandMailbox.Status := Accepted;
+        GVL_OPCUA.CommandMailbox.Result := 'aceptado por CODESYS';
+        GVL_OPCUA.LastAcceptedSequence := GVL_OPCUA.CommandMailbox.Sequence;
+    END_IF
+END_IF
+
+IF RejectCommand THEN
+    IF GVL_OPCUA.CommandMailbox.Status &lt;&gt; Expired THEN
+        GVL_OPCUA.CommandMailbox.Status := Rejected;
+    END_IF
+    GVL_OPCUA.LastRejectedSequence := GVL_OPCUA.CommandMailbox.Sequence;
+    GVL_OPCUA.CommandMailbox.AppliedAtMs := GVL_System.NowMs;
+    GVL_OPCUA.CommandConfirmation := GVL_OPCUA.CommandMailbox;
+    GVL_OPCUA.HasCommand := FALSE;
+END_IF
+
+FOR ColumnIndex := 1 TO 200 DO
+    CommandForColumn := EmptyCommand;
+    IF AcceptCommand AND TargetColumnId = ColumnIndex THEN
+        CommandForColumn := GVL_OPCUA.CommandMailbox;
+        GVL_Columns.Columns[ColumnIndex].LastCommand := GVL_OPCUA.CommandMailbox;
+    END_IF
+
+    GVL_ColumnInstances[ColumnIndex](
+        Config := GVL_Columns.Columns[ColumnIndex].Config,
+        NowMs := GVL_System.NowMs,
+        InputScale := GVL_Columns.Columns[ColumnIndex].InputScale,
+        OutputScale := GVL_Columns.Columns[ColumnIndex].OutputScale,
+        Command := CommandForColumn,
+        GatewayStatus := GVL_Columns.Columns[ColumnIndex].GatewayStatus
+    );
+
+    GVL_Columns.Columns[ColumnIndex].Status := GVL_ColumnInstances[ColumnIndex].Status;
+    GVL_Columns.Columns[ColumnIndex].PumpCommand := GVL_ColumnInstances[ColumnIndex].PumpCommand;
+END_FOR
+
+IF AcceptCommand THEN
+    GVL_OPCUA.CommandMailbox.Status := Applied;
+    GVL_OPCUA.CommandMailbox.AppliedAtMs := GVL_System.NowMs;
+    GVL_OPCUA.CommandConfirmation := GVL_OPCUA.CommandMailbox;
+    GVL_OPCUA.HasCommand := FALSE;
+END_IF
+END_PROGRAM
+</source>
+    <source path="src/PRG_Simulation.st" language="st">PROGRAM PRG_Simulation
+VAR
+    ColumnIndex : UINT;
+    ConsumptionKg : REAL;
+    SimulatedFlowKgH : REAL;
+    Faulted : BOOL;
+END_VAR
+
+(* Offline simulation task. This program must not be used as real hardware I/O.
+   It is disabled automatically when RealIoEnabled becomes TRUE. *)
+
+IF NOT GVL_Simulation.Enabled OR GVL_System.RealIoEnabled THEN
+    RETURN;
+END_IF
+
+IF GVL_Simulation.ForcePrimaryOffline THEN
+    GVL_System.IsActive := FALSE;
+    GVL_System.ControllerRole := 'primary-offline';
+ELSE
+    GVL_System.IsActive := TRUE;
+    GVL_System.ControllerRole := 'primary';
+END_IF
+
+FOR ColumnIndex := 1 TO 200 DO
+    Faulted := GVL_Simulation.FaultColumnId = ColumnIndex;
+
+    GVL_Columns.Columns[ColumnIndex].GatewayStatus.Online := NOT (GVL_Simulation.ForceGatewayOffline AND Faulted);
+    GVL_Columns.Columns[ColumnIndex].GatewayStatus.LastHeartbeatMs := GVL_System.NowMs;
+    GVL_Columns.Columns[ColumnIndex].GatewayStatus.SafeStateActive := GVL_Simulation.ForceGatewayOffline AND Faulted;
+
+    GVL_Columns.Columns[ColumnIndex].InputScale.Quality.Valid := NOT (GVL_Simulation.ForceScaleOffline AND Faulted);
+    GVL_Columns.Columns[ColumnIndex].InputScale.Quality.Stable := NOT (GVL_Simulation.ForceTare AND Faulted);
+    GVL_Columns.Columns[ColumnIndex].InputScale.Quality.Quality := SEL(GVL_Columns.Columns[ColumnIndex].InputScale.Quality.Valid, 0.0, 1.0);
+    GVL_Columns.Columns[ColumnIndex].InputScale.IsRefill := GVL_Simulation.ForceRefill AND Faulted;
+    GVL_Columns.Columns[ColumnIndex].InputScale.IsTare := GVL_Simulation.ForceTare AND Faulted;
+
+    IF GVL_Simulation.ForceRefill AND Faulted THEN
+        GVL_Columns.Columns[ColumnIndex].InputScale.WeightKg := GVL_Columns.Columns[ColumnIndex].InputScale.WeightKg + 100.0;
+    ELSIF GVL_Columns.Columns[ColumnIndex].InputScale.Quality.Valid THEN
+        SimulatedFlowKgH := GVL_Columns.Columns[ColumnIndex].PumpCommand.OutputPct / 100.0 * GVL_Columns.Columns[ColumnIndex].Config.FlowSetpointKgH;
+        ConsumptionKg := SimulatedFlowKgH / 36000.0; (* Approx. 100 ms task step. *)
+        IF GVL_Columns.Columns[ColumnIndex].InputScale.WeightKg &gt; ConsumptionKg THEN
+            GVL_Columns.Columns[ColumnIndex].InputScale.WeightKg := GVL_Columns.Columns[ColumnIndex].InputScale.WeightKg - ConsumptionKg;
+        END_IF
+        GVL_Columns.Columns[ColumnIndex].OutputScale.WeightKg := GVL_Columns.Columns[ColumnIndex].OutputScale.WeightKg + ConsumptionKg * 0.98;
+    END_IF
+
+    IF GVL_Simulation.ForceCriticalAlarm AND Faulted THEN
+        GVL_Columns.Columns[ColumnIndex].Status.Alarm.Active := TRUE;
+        GVL_Columns.Columns[ColumnIndex].Status.Alarm.Severity := 3;
+        GVL_Columns.Columns[ColumnIndex].Status.Alarm.Code := 'SIM_CRITICAL';
+        GVL_Columns.Columns[ColumnIndex].Status.Alarm.Message := 'alarma critica simulada';
+        GVL_Columns.Columns[ColumnIndex].Status.Alarm.RequiresAck := TRUE;
+    END_IF
+END_FOR
+END_PROGRAM
+</source>
+    <source path="src/TaskModel.st" language="st">VAR_GLOBAL CONSTANT
+    TASK_FAST_PERIOD_MS : UDINT := 100;      (* watchdog, heartbeat, salida segura *)
+    TASK_NORMAL_PERIOD_MS : UDINT := 1000;   (* estados, comandos, alarmas *)
+    TASK_SLOW_PERIOD_MS : UDINT := 30000;    (* estimador gravimetrico y PI lento *)
+    TASK_COMM_PERIOD_MS : UDINT := 500;      (* preparacion variables OPC UA *)
+END_VAR
+
+(* Configuracion propuesta de tareas:
+   - PRG_Simulation: solo demo/offline; nunca con RealIoEnabled=TRUE.
+   - PRG_ColumnControl: tarea normal; usa FB_Column para 200 columnas.
+   - En CODESYS real, los periodos deben configurarse en Task Configuration,
+     no solamente en este archivo fuente documental. *)
+</source>
+    <source path="src/Types.st" language="st">TYPE E_ColumnState :
+(
+    Offline,
+    OutOfService,
+    Available,
+    Preparation,
+    Ready,
+    Running,
+    Paused,
+    Alarm,
+    Finished,
+    Maintenance
+);
+END_TYPE
+
+TYPE E_CommandStatus :
+(
+    Pending,
+    Accepted,
+    Rejected,
+    Applied,
+    Expired,
+    Failed
+);
+END_TYPE
+
+TYPE ST_DataQuality :
+STRUCT
+    Valid : BOOL;
+    Stable : BOOL;
+    Quality : REAL;
+    SourceTimestampMs : ULINT;
+    ReasonCode : UINT;
+END_STRUCT
+END_TYPE
+
+TYPE ST_ScaleReading :
+STRUCT
+    WeightKg : REAL;
+    Quality : ST_DataQuality;
+    IsRefill : BOOL;
+    IsTare : BOOL;
+    VesselChanged : BOOL;
+END_STRUCT
+END_TYPE
+
+TYPE ST_PumpCommand :
+STRUCT
+    OutputPct : REAL;
+    Enable : BOOL;
+    SafeStop : BOOL;
+END_STRUCT
+END_TYPE
+
+TYPE ST_RecipeParameters :
+STRUCT
+    RecipeId : STRING[40];
+    FlowSetpointKgH : REAL;
+    TemperatureSetpointC : REAL;
+    AerationEnabled : BOOL;
+    PIKp : REAL;
+    PIKi : REAL;
+END_STRUCT
+END_TYPE
+
+TYPE ST_ColumnCommand :
+STRUCT
+    CommandId : STRING[64];
+    ColumnId : UINT;
+    CommandType : STRING[32];
+    RequestedValue : REAL;
+    RequestedBy : STRING[80];
+    RequestedAtMs : ULINT;
+    ExpiresAtMs : ULINT;
+    Sequence : UDINT;
+    Status : E_CommandStatus;
+    Result : STRING[120];
+    AppliedAtMs : ULINT;
+END_STRUCT
+END_TYPE
+
+TYPE ST_ColumnAlarm :
+STRUCT
+    Active : BOOL;
+    Severity : UINT;
+    Code : STRING[40];
+    Message : STRING[120];
+    RequiresAck : BOOL;
+    Acked : BOOL;
+END_STRUCT
+END_TYPE
+
+TYPE ST_ColumnConfig :
+STRUCT
+    ColumnId : UINT;
+    Enabled : BOOL;
+    FlowSetpointKgH : REAL;
+    FlowWindowS : REAL;
+    MinFlowPoints : UINT;
+    MaxPumpOutputPct : REAL;
+    MaxOutputDeltaPct : REAL;
+    BriefLossTimeoutMs : ULINT;
+    ProlongedLossTimeoutMs : ULINT;
+END_STRUCT
+END_TYPE
+
+TYPE ST_ColumnStatus :
+STRUCT
+    State : E_ColumnState;
+    InputScale : ST_ScaleReading;
+    OutputScale : ST_ScaleReading;
+    FlowMeasuredKgH : REAL;
+    FlowQuality : REAL;
+    PumpOutputPct : REAL;
+    TemperaturePvC : REAL;
+    PIIntegratorFrozen : BOOL;
+    GatewayHealthy : BOOL;
+    Alarm : ST_ColumnAlarm;
+END_STRUCT
+END_TYPE
+
+TYPE ST_GatewayStatus :
+STRUCT
+    GatewayId : STRING[40];
+    Online : BOOL;
+    LastHeartbeatMs : ULINT;
+    Quality : REAL;
+    SafeStateActive : BOOL;
+END_STRUCT
+END_TYPE
+
+TYPE ST_SystemRuntime :
+STRUCT
+    Heartbeat : ULINT;
+    NowMs : ULINT;
+    ControllerId : STRING[40];
+    ControllerRole : STRING[20];
+    IsActive : BOOL;
+    RedundancyHealthy : BOOL;
+    ApplicationVersion : STRING[40];
+    ControlAuthority : STRING[40];
+    RealIoEnabled : BOOL;
+END_STRUCT
+END_TYPE
+
+TYPE ST_OpcuaRuntime :
+STRUCT
+    CommandMailbox : ST_ColumnCommand;
+    CommandConfirmation : ST_ColumnCommand;
+    HasCommand : BOOL;
+    LastAcceptedSequence : UDINT;
+    LastRejectedSequence : UDINT;
+END_STRUCT
+END_TYPE
+
+TYPE ST_ColumnRuntime :
+STRUCT
+    Config : ST_ColumnConfig;
+    Status : ST_ColumnStatus;
+    InputScale : ST_ScaleReading;
+    OutputScale : ST_ScaleReading;
+    GatewayStatus : ST_GatewayStatus;
+    PumpCommand : ST_PumpCommand;
+    LastCommand : ST_ColumnCommand;
+END_STRUCT
+END_TYPE
+
+TYPE ST_ColumnBank :
+STRUCT
+    Columns : ARRAY[1..200] OF ST_ColumnRuntime;
+END_STRUCT
+END_TYPE
+
+TYPE ST_SimulationRuntime :
+STRUCT
+    Enabled : BOOL;
+    Scenario : STRING[40];
+    FaultColumnId : UINT;
+    ForcePrimaryOffline : BOOL;
+    ForceGatewayOffline : BOOL;
+    ForceScaleOffline : BOOL;
+    ForceRefill : BOOL;
+    ForceTare : BOOL;
+    ForceCriticalAlarm : BOOL;
+END_STRUCT
+END_TYPE
+</source>
+  </sources>
+</plcopenSource>

@@ -48,6 +48,8 @@ Pendiente:
 
 ## Hito 3: CODESYS
 
+Estado: completado localmente como fuente ST y validacion estatica offline. Pendiente validacion en CODESYS Development System.
+
 Entregables:
 
 - `codesys-control/src/*.st`;
@@ -56,8 +58,23 @@ Entregables:
 - `ARRAY[1..200] OF FB_Column`;
 - estimador gravimetrico con regresion lineal;
 - PI lento con anti-windup;
-- PLCopen XML inicial cuando sea posible;
+- `PRG_ColumnControl` para 200 columnas;
+- `PRG_Simulation` para demo offline sin I/O real;
+- PLCopen XML preliminar generado en `codesys-control/plcopen/codesys-control.plcopen.xml`;
+- validador offline `codesys_opcua_interface/codesys_project.py`;
 - documentacion de tareas.
+
+Validacion:
+
+- `codesys-opcua-interface`: 22 tests passing.
+
+Pendiente:
+
+- importar/compilar en CODESYS Development System;
+- configurar tareas reales;
+- publicar simbolos OPC UA desde CODESYS real;
+- probar `FB_Column` y `PRG_ColumnControl` contra un runtime CODESYS;
+- validar performance de 200 columnas en hardware de control.
 
 ## Hito 4: plataforma web
 

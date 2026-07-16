@@ -128,3 +128,59 @@ STRUCT
     SafeStateActive : BOOL;
 END_STRUCT
 END_TYPE
+
+TYPE ST_SystemRuntime :
+STRUCT
+    Heartbeat : ULINT;
+    NowMs : ULINT;
+    ControllerId : STRING[40];
+    ControllerRole : STRING[20];
+    IsActive : BOOL;
+    RedundancyHealthy : BOOL;
+    ApplicationVersion : STRING[40];
+    ControlAuthority : STRING[40];
+    RealIoEnabled : BOOL;
+END_STRUCT
+END_TYPE
+
+TYPE ST_OpcuaRuntime :
+STRUCT
+    CommandMailbox : ST_ColumnCommand;
+    CommandConfirmation : ST_ColumnCommand;
+    HasCommand : BOOL;
+    LastAcceptedSequence : UDINT;
+    LastRejectedSequence : UDINT;
+END_STRUCT
+END_TYPE
+
+TYPE ST_ColumnRuntime :
+STRUCT
+    Config : ST_ColumnConfig;
+    Status : ST_ColumnStatus;
+    InputScale : ST_ScaleReading;
+    OutputScale : ST_ScaleReading;
+    GatewayStatus : ST_GatewayStatus;
+    PumpCommand : ST_PumpCommand;
+    LastCommand : ST_ColumnCommand;
+END_STRUCT
+END_TYPE
+
+TYPE ST_ColumnBank :
+STRUCT
+    Columns : ARRAY[1..200] OF ST_ColumnRuntime;
+END_STRUCT
+END_TYPE
+
+TYPE ST_SimulationRuntime :
+STRUCT
+    Enabled : BOOL;
+    Scenario : STRING[40];
+    FaultColumnId : UINT;
+    ForcePrimaryOffline : BOOL;
+    ForceGatewayOffline : BOOL;
+    ForceScaleOffline : BOOL;
+    ForceRefill : BOOL;
+    ForceTare : BOOL;
+    ForceCriticalAlarm : BOOL;
+END_STRUCT
+END_TYPE

@@ -13,7 +13,7 @@ python -m pytest -q
 Resultado:
 
 ```text
-17 passed
+22 passed
 ```
 
 Cobertura funcional validada:
@@ -32,7 +32,13 @@ Cobertura funcional validada:
 - bloqueo por doble activo;
 - failover simulado;
 - escritura solo al activo;
-- suscripcion simulada.
+- suscripcion simulada;
+- presencia de todos los `FB_*` y `ST_*` requeridos para CODESYS;
+- soporte fuente de `ARRAY[1..200] OF FB_Column`;
+- `REAL_IO_ENABLED=false` por defecto en `GVL_System.RealIoEnabled`;
+- enrutamiento del buzon OPC UA por `PRG_ColumnControl`;
+- bloqueo de simulacion cuando `RealIoEnabled=TRUE`;
+- generacion parseable de PLCopen XML preliminar.
 
 ## column-gateway
 
@@ -60,6 +66,7 @@ Cobertura funcional validada:
 ## No validado en este ambiente
 
 - CODESYS real;
+- importacion/compilacion del XML PLCopen preliminar en CODESYS Development System;
 - OPC UA real con certificados;
 - hardware Modbus/RS232;
 - systemd;

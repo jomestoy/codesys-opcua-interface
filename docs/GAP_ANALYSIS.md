@@ -17,7 +17,7 @@ Fecha de auditoria: 2026-07-15.
   - diagnostico local;
   - comandos nominales de red y dispositivos.
 - Tests unitarios actuales:
-  - `codesys-opcua-interface`: 17 tests.
+  - `codesys-opcua-interface`: 22 tests.
   - `column-gateway`: 7 tests.
 - Estimador matematico offline de flujo por regresion lineal.
 - PI lento offline.
@@ -39,6 +39,9 @@ Fecha de auditoria: 2026-07-15.
 - Suscripciones simuladas.
 - Wrapper `asyncua` preparado pero no conectado a runtime real.
 - Structured Text fuente no compilado en CODESYS.
+- Programa ST offline `PRG_ColumnControl` para 200 columnas.
+- Programa ST offline `PRG_Simulation` para escenarios de demo sin I/O real.
+- Generacion de PLCopen XML preliminar desde fuentes ST.
 
 ## Que esta simulado
 
@@ -97,9 +100,9 @@ Fecha de auditoria: 2026-07-15.
 - Validar estructuras `ST_*`.
 - Validar GVLs y simbolos exportados.
 - Validar modelo de 200 columnas en CODESYS.
-- Proyecto PLCopen XML importable.
-- Simulacion IEC.
-- Tareas documentadas.
+- Validar si el XML preliminar generado es importable sin ajustes.
+- Simulacion IEC en CODESYS real.
+- Tareas documentadas y configuradas dentro del proyecto CODESYS real.
 - Validacion en CODESYS Development System.
 - Licenciamiento/runtime para prueba real.
 

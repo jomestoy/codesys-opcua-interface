@@ -1,0 +1,36 @@
+{
+  "default": {
+    "columns": 200,
+    "activeController": "primary",
+    "description": "Operacion nominal con 200 columnas simuladas y REAL_IO_ENABLED=false"
+  },
+  "single_scale_offline": {
+    "faultColumnId": 7,
+    "forceScaleOffline": true,
+    "expected": "Congelar control, advertir perdida breve y detener ante perdida prolongada"
+  },
+  "refill": {
+    "faultColumnId": 12,
+    "forceRefill": true,
+    "expected": "Detectar recarga, congelar estimador e integrador"
+  },
+  "tare": {
+    "faultColumnId": 15,
+    "forceTare": true,
+    "expected": "Marcar peso inestable y congelar PI"
+  },
+  "gateway_offline": {
+    "faultColumnId": 21,
+    "forceGatewayOffline": true,
+    "expected": "Activar safe state para la columna afectada"
+  },
+  "primary_failover": {
+    "forcePrimaryOffline": true,
+    "expected": "El conector externo debe pasar al endpoint secundario activo"
+  },
+  "critical_alarm": {
+    "faultColumnId": 33,
+    "forceCriticalAlarm": true,
+    "expected": "Detener bomba y exigir reconocimiento"
+  }
+}

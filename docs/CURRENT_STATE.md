@@ -84,12 +84,24 @@ Se agregaron:
 - dashboard Grafana inicial de solo lectura;
 - flow Node-RED inicial sin control;
 - reverse proxy inicial;
-- codigo Structured Text base para CODESYS.
+- codigo Structured Text base para CODESYS;
+- runtime Structured Text de 200 columnas con `GVL_System`, `GVL_OPCUA` y `GVL_Columns`;
+- `PRG_ColumnControl` para inicializar/ejecutar 200 instancias reutilizables `FB_Column`;
+- `PRG_Simulation` para demo offline con `REAL_IO_ENABLED=false`;
+- `TaskModel.st` con periodos propuestos documentados;
+- `codesys-control/plcopen/codesys-control.plcopen.xml` como export preliminar de fuentes ST;
+- validador offline de fuentes CODESYS y generador PLCopen preliminar.
 
 Pruebas ejecutadas despues de Hito 2:
 
 ```text
 17 passed
+```
+
+Pruebas ejecutadas despues de Hito 3:
+
+```text
+22 passed
 ```
 
 Demo ejecutada:
@@ -106,6 +118,13 @@ Resultado observado:
 - comando `set_flow` aplicado por `CODESYS-A`;
 - failover simulado a `CODESYS-B`;
 - doble escritura prevenida.
+
+Estado Hito 3:
+
+- el modelo CODESYS ya existe como fuente ST y se valida de forma estatica;
+- no se ha compilado ni importado en CODESYS Development System;
+- no existe binario `.project`;
+- el PLCopen XML generado es preliminar y debe validarse en CODESYS antes de usarlo en runtime real.
 
 ### Gateway
 
