@@ -1,6 +1,6 @@
 {
   "name": "codesys-opcua-platform-web",
-  "version": "0.5.0-hito5",
+  "version": "0.7.0-hito7",
   "private": true,
   "type": "module",
   "scripts": {

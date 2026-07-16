@@ -1,0 +1,69 @@
+{
+  "id": null,
+  "uid": "column-trends",
+  "title": "Columnas - tendencias de proceso",
+  "tags": ["columns", "trends", "readonly", "hito7"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "editable": false,
+  "templating": {
+    "list": [
+      {
+        "name": "column_id",
+        "label": "Columna",
+        "type": "query",
+        "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+        "query": "select id from columns order by id",
+        "refresh": 1,
+        "includeAll": false,
+        "multi": true
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Peso estanque entrada",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [{"refId": "A", "format": "time_series", "rawSql": "select ts as time, concat('C', column_id) as metric, value from historical_series where variable = 'input_weight_kg' and column_id in (${column_id:csv}) order by ts"}],
+      "fieldConfig": {"defaults": {"unit": "kg"}, "overrides": []}
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Flujo calculado vs setpoint",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [
+        {"refId": "A", "format": "time_series", "rawSql": "select ts as time, concat('PV C', column_id) as metric, value from historical_series where variable = 'flow_measured_kg_h' and column_id in (${column_id:csv}) order by ts"},
+        {"refId": "B", "format": "time_series", "rawSql": "select ts as time, concat('SP C', column_id) as metric, value from historical_series where variable = 'flow_setpoint_kg_h' and column_id in (${column_id:csv}) order by ts"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "kg/h"}, "overrides": []}
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Mando de bomba",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [{"refId": "A", "format": "time_series", "rawSql": "select ts as time, concat('C', column_id) as metric, value from historical_series where variable = 'pump_output_pct' and column_id in (${column_id:csv}) order by ts"}],
+      "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}, "overrides": []}
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Temperatura PV y SP",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [
+        {"refId": "A", "format": "time_series", "rawSql": "select ts as time, concat('PV C', column_id) as metric, value from historical_series where variable = 'temperature_pv_c' and column_id in (${column_id:csv}) order by ts"},
+        {"refId": "B", "format": "time_series", "rawSql": "select ts as time, concat('SP C', column_id) as metric, value from historical_series where variable = 'temperature_setpoint_c' and column_id in (${column_id:csv}) order by ts"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "celsius"}, "overrides": []}
+    }
+  ]
+}

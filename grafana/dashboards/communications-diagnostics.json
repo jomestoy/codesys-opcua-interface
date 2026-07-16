@@ -1,0 +1,64 @@
+{
+  "id": null,
+  "uid": "communications-diagnostics",
+  "title": "Comunicaciones - OPC UA y gateways",
+  "tags": ["communications", "diagnostics", "readonly", "hito7"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "editable": false,
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Endpoint CODESYS activo",
+      "gridPos": {"h": 5, "w": 8, "x": 0, "y": 0},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [{"refId": "A", "format": "table", "rawSql": "select controller_id from codesys_endpoints where is_active = true limit 1"}]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Reconexiones OPC UA ultimos 15 min",
+      "gridPos": {"h": 5, "w": 8, "x": 8, "y": 0},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [{"refId": "A", "format": "table", "rawSql": "select count(*) as reconnects from events where source = 'opcua-connector' and code = 'reconnect' and created_at > now() - interval '15 minutes'"}],
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}, {"color": "red", "value": 5}]}}, "overrides": []}
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Gateways online",
+      "gridPos": {"h": 5, "w": 8, "x": 16, "y": 0},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [{"refId": "A", "format": "table", "rawSql": "select count(*) as gateways_online from gateways where online = true"}]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Latencia OPC UA",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [{"refId": "A", "format": "time_series", "rawSql": "select ts as time, endpoint as metric, latency_ms as value from opcua_metrics order by ts"}],
+      "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []}
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Calidad por gateway",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [{"refId": "A", "format": "time_series", "rawSql": "select ts as time, gateway_id as metric, quality as value from gateway_metrics order by ts"}],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}, "overrides": []}
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Dispositivos con errores recientes",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 13},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [{"refId": "A", "format": "table", "rawSql": "select created_at, gateway_id, device_id, protocol, message from events where source = 'gateway' and severity in ('warning','critical') order by created_at desc limit 50"}]
+    }
+  ]
+}

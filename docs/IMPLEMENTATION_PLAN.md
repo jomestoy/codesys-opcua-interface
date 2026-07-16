@@ -151,12 +151,30 @@ Entregables:
 
 ## Hito 7: Grafana y Node-RED
 
+Estado: completado localmente como provisioning y fuente de integracion sin autoridad de control.
+
 Entregables:
 
-- dashboards iniciales;
-- provisioning;
-- flows de notificacion sin control directo;
-- reverse proxy.
+- dashboards Grafana de resumen, tendencias y comunicaciones;
+- provisioning de datasource PostgreSQL readonly;
+- provisioning de dashboards no editables;
+- flows Node-RED de notificacion y reportes;
+- editor Node-RED cerrado por defecto en demo;
+- reverse proxy con rutas `/grafana/`, `/node-red/` y `/node-red-admin/`;
+- API `/integrations`;
+- pestana UI `Integraciones`.
+
+Validacion:
+
+- `codesys-opcua-interface`: 41 tests passing.
+- `compileall`: OK.
+
+Pendiente:
+
+- ejecutar contenedores con Docker en entorno con imagenes disponibles;
+- conectar Grafana a PostgreSQL real;
+- configurar SSO/LDAP/OIDC o politica equivalente para administracion Node-RED;
+- conectar Node-RED a correo/Teams reales sin secretos en Git.
 
 ## Hito 8: empaquetado
 

@@ -1,10 +1,153 @@
 {
+  "id": null,
+  "uid": "column-overview",
   "title": "Columnas - resumen operacional",
+  "tags": ["columns", "readonly", "hito7"],
   "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 2,
+  "refresh": "10s",
+  "editable": false,
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "block",
+        "label": "Bloque",
+        "type": "query",
+        "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+        "query": "select distinct block_id from columns order by block_id",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
   "panels": [
-    {"type": "stat", "title": "Columnas ejecutando", "targets": [{"expr": "columns_running"}]},
-    {"type": "timeseries", "title": "Flujo gravimetrico", "targets": [{"expr": "flow_measured_kg_h"}]},
-    {"type": "timeseries", "title": "Calidad de datos", "targets": [{"expr": "data_quality"}]}
-  ],
-  "editable": false
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Columnas ejecutando",
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "select count(*) as running from columns where state = 'Running' and (${block:csv} = 'All' or block_id in (${block:csv}))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "short", "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}},
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Alarmas activas",
+      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 0},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "select count(*) as active_alarms from alarms where active = true"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}, {"color": "red", "value": 5}]}},
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Calidad media de datos",
+      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 0},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "select coalesce(avg(data_quality), 0) as data_quality from columns where (${block:csv} = 'All' or block_id in (${block:csv}))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "percentunit", "min": 0, "max": 1, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 0.75}, {"color": "green", "value": 0.9}]}},
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Flujo total kg/h",
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 0},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "select coalesce(sum(flow_measured_kg_h), 0) as total_flow from columns where (${block:csv} = 'All' or block_id in (${block:csv}))"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "kg/h"}, "overrides": []}
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Flujo gravimetrico por bloque",
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 5},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "select ts as time, concat('Bloque ', block_id) as metric, avg(value) as value from historical_series where variable = 'flow_measured_kg_h' group by ts, block_id order by ts"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "kg/h"}, "overrides": []}
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Calidad de datos",
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 5},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "select ts as time, concat('Bloque ', block_id) as metric, avg(value) as value from historical_series where variable = 'data_quality' group by ts, block_id order by ts"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}, "overrides": []}
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Alarmas criticas activas",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 14},
+      "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "select created_at, column_id, severity, code, message, source from alarms where active = true and severity in ('critical','high') order by created_at desc limit 50"
+        }
+      ]
+    }
+  ]
 }

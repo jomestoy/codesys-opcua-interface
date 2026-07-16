@@ -2,7 +2,7 @@
 
 Plataforma operacional para control de columnas con CODESYS como autoridad final, comunicacion OPC UA segura y gateway Linux separado para campo.
 
-Estado actual: prototipo offline integrado hasta Hito 4.
+Estado actual: prototipo offline integrado hasta Hito 7.
 
 ## Principios de seguridad
 
@@ -25,6 +25,9 @@ Estado actual: prototipo offline integrado hasta Hito 4.
 - Recetas, campanas, alarmas y auditoria con flujos Hito 5.
 - Frontend React/Vite/MUI como fuente.
 - Migracion SQL inicial ampliada.
+- Grafana provisionado con dashboards de solo lectura.
+- Node-RED provisionado para notificaciones/reportes, sin control directo.
+- Reverse proxy demo con rutas para API, Web, Grafana y Node-RED.
 
 ## Ejecutar pruebas
 
@@ -36,7 +39,7 @@ python -m compileall codesys_opcua_interface services tests
 Resultado ultimo validado:
 
 ```text
-36 passed
+41 passed
 ```
 
 ## Ejecutar API demo
@@ -77,4 +80,5 @@ Ver detalles en:
 - `docs/GAP_ANALYSIS.md`
 - `docs/IMPLEMENTATION_PLAN.md`
 - `docs/WEB_PLATFORM.md`
+- `docs/GRAFANA_NODE_RED.md`
 - `codesys-control/docs/CODESYS_CONTROL.md`

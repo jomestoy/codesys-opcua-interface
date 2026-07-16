@@ -121,3 +121,36 @@ export type AuditEvent = {
   detail: Record<string, unknown>;
   event_time: string;
 };
+
+export type GrafanaDashboard = {
+  uid: string;
+  title: string;
+  path: string;
+  editable: boolean;
+  tags: string[];
+  panels: number;
+};
+
+export type NodeRedFlow = {
+  id: string;
+  label: string;
+  path: string;
+  disabled: boolean;
+  contains_control_keywords: boolean;
+};
+
+export type IntegrationStatus = {
+  grafana: {
+    enabled: boolean;
+    base_path: string;
+    dashboards: GrafanaDashboard[];
+    control_allowed: boolean;
+  };
+  node_red: {
+    enabled: boolean;
+    runtime_base_path: string;
+    admin_base_path: string;
+    flows: NodeRedFlow[];
+    control_allowed: boolean;
+  };
+};

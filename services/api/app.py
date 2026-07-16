@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from codesys_opcua_interface.integrations import integration_status, list_grafana_dashboards, list_node_red_flows
 from codesys_opcua_interface.platform_store import (
     NotFound,
     PermissionDenied,
@@ -138,7 +139,7 @@ def create_app(
     token_manager = token_manager or TokenManager(secret=os.getenv("API_TOKEN_SECRET"))
     service = service or PlatformService(store, build_demo_connector())
 
-    app = FastAPI(title="CODESYS OPC UA Platform API", version="0.5.0-hito5")
+    app = FastAPI(title="CODESYS OPC UA Platform API", version="0.7.0-hito7")
     app.state.store = store
     app.state.token_manager = token_manager
     app.state.service = service
@@ -248,6 +249,21 @@ def create_app(
     def summary(user=Depends(current_user)) -> dict[str, Any]:
         store.require_permission(user, "system.read")
         return store.summary()
+
+    @app.get("/integrations")
+    def integrations(user=Depends(current_user)) -> dict[str, Any]:
+        store.require_permission(user, "system.read")
+        return integration_status()
+
+    @app.get("/integrations/grafana/dashboards")
+    def grafana_dashboards(user=Depends(current_user)) -> list[dict[str, Any]]:
+        store.require_permission(user, "system.read")
+        return [dashboard.to_dict() for dashboard in list_grafana_dashboards()]
+
+    @app.get("/integrations/node-red/flows")
+    def node_red_flows(user=Depends(current_user)) -> list[dict[str, Any]]:
+        store.require_permission(user, "system.read")
+        return [flow.to_dict() for flow in list_node_red_flows()]
 
     @app.websocket("/ws/summary")
     async def summary_socket(websocket: WebSocket) -> None:

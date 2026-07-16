@@ -28,6 +28,9 @@ Fecha de auditoria: 2026-07-15.
 - Parser de referencia LP7516.
 - API FastAPI offline con autenticacion, permisos, columnas, comandos, recetas, campanas, alarmas, usuarios y auditoria.
 - Flujos offline/API de recetas, campanas y alarmas Hito 5.
+- Dashboards Grafana provisionados como JSON de solo lectura.
+- Flujos Node-RED provisionados para notificacion/reportes sin control directo.
+- API y fuente frontend exponen estado de integraciones con `control_allowed=false`.
 
 ## Que funciona solo offline
 
@@ -47,6 +50,7 @@ Fecha de auditoria: 2026-07-15.
 - Backend web funcional en memoria, sin PostgreSQL real.
 - Frontend React/Vite/MUI como fuente no compilada en este ambiente.
 - Recetas/campanas/alarmas funcionales en memoria y simulacion.
+- Grafana y Node-RED provisionados sin arranque de contenedores validado.
 
 ## Que esta simulado
 
@@ -97,6 +101,8 @@ Fecha de auditoria: 2026-07-15.
 - Completar pantallas restantes: tendencias, comunicaciones, dispositivos, mapa I/O, mantenimiento, simulador, estado sistema, backup/restore.
 - Persistir Hito 5 en PostgreSQL real.
 - Hardening JWT/OIDC productivo.
+- Validar Grafana contra PostgreSQL/Timescale real.
+- Habilitar administracion Node-RED con autenticacion fuerte si se requiere editar flows en produccion.
 
 ## Que falta para CODESYS
 
@@ -164,6 +170,9 @@ Arquitectura modular, driver simulado, buffer, autoridad y systemd base ya exist
 - Servicio systemd ejecutandose en Linux.
 - Failover real entre dos runtimes CODESYS.
 - Pruebas FAT/SAT.
+- Arranque real de contenedores Grafana/Node-RED en este ambiente.
+- Dashboards Grafana con datos historicos PostgreSQL reales.
+- Envio real de notificaciones Node-RED hacia correo/Teams.
 
 ## Riesgo principal
 

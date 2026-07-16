@@ -116,6 +116,12 @@ Pruebas ejecutadas despues de Hito 5:
 36 passed
 ```
 
+Pruebas ejecutadas despues de Hito 7:
+
+```text
+41 passed
+```
+
 Demo ejecutada:
 
 ```text
@@ -157,6 +163,16 @@ Estado Hito 5:
 - historial de alarmas, reconocimiento con comentario, limpieza y exportacion;
 - API y fuente frontend actualizadas para estas acciones;
 - todo sigue operando offline/simulacion; CODESYS real y PostgreSQL real siguen pendientes.
+
+Estado Hito 7:
+
+- Grafana queda provisionado con tres dashboards de solo lectura;
+- datasource PostgreSQL de Grafana preparado para usuario readonly, sin secretos en Git;
+- Node-RED queda provisionado con flujos de notificacion y reportes;
+- el editor Node-RED queda deshabilitado/cerrado por defecto en demo;
+- reverse proxy publica Web/API/Grafana/Node-RED runtime;
+- API y frontend exponen estado de integraciones con `control_allowed=false`;
+- no se validaron contenedores reales ni conexion a PostgreSQL real en este ambiente.
 
 ### Gateway
 

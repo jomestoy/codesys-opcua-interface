@@ -20,7 +20,7 @@ def test_web_source_contains_functional_screens_and_control_flow():
     app_source = (WEB_ROOT / "src" / "App.tsx").read_text(encoding="utf-8")
     api_source = (WEB_ROOT / "src" / "api.ts").read_text(encoding="utf-8")
 
-    for label in ["Resumen", "Planta", "Recetas", "Campañas", "Alarmas", "Usuarios", "Auditoría"]:
+    for label in ["Resumen", "Planta", "Recetas", "Campañas", "Alarmas", "Integraciones", "Usuarios", "Auditoría"]:
         assert label in app_source
 
     for route in [
@@ -33,6 +33,7 @@ def test_web_source_contains_functional_screens_and_control_flow():
         "/campaigns",
         "/alarm-rules",
         "/alarms/export",
+        "/integrations",
         "/users",
     ]:
         assert route in api_source
@@ -41,4 +42,5 @@ def test_web_source_contains_functional_screens_and_control_flow():
     assert "api.cloneRecipe" in app_source
     assert "api.pauseCampaign" in app_source
     assert "api.createAlarmRule" in app_source
+    assert "api.integrations" in app_source
     assert "REAL_IO_ENABLED" in app_source

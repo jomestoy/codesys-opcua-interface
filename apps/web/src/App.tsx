@@ -28,7 +28,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type Session } from "./api";
-import type { Alarm, AlarmRule, Campaign, Column, Recipe, Summary, User } from "./types";
+import type { Alarm, AlarmRule, Campaign, Column, GrafanaDashboard, NodeRedFlow, Recipe, Summary, User } from "./types";
 
 const sessionKey = "codesys-platform-session";
 
@@ -123,6 +123,7 @@ function Shell({ session, onLogout }: { session: Session; onLogout: () => void }
           <Tab label="Recetas" />
           <Tab label="Campañas" />
           <Tab label="Alarmas" />
+          <Tab label="Integraciones" />
           <Tab label="Usuarios" />
           <Tab label="Auditoría" />
         </Tabs>
@@ -131,8 +132,9 @@ function Shell({ session, onLogout }: { session: Session; onLogout: () => void }
         <TabPanel value={tab} index={2}><RecipesView token={token} /></TabPanel>
         <TabPanel value={tab} index={3}><CampaignsView token={token} /></TabPanel>
         <TabPanel value={tab} index={4}><AlarmsView token={token} /></TabPanel>
-        <TabPanel value={tab} index={5}><UsersView token={token} currentUser={session.user} /></TabPanel>
-        <TabPanel value={tab} index={6}><AuditView token={token} /></TabPanel>
+        <TabPanel value={tab} index={5}><IntegrationsView token={token} /></TabPanel>
+        <TabPanel value={tab} index={6}><UsersView token={token} currentUser={session.user} /></TabPanel>
+        <TabPanel value={tab} index={7}><AuditView token={token} /></TabPanel>
       </Container>
     </Box>
   );
@@ -429,6 +431,63 @@ function AlarmsView({ token }: { token: string }) {
             {alarm.active && <Button color="warning" onClick={() => clear.mutate(alarm.id)}>Limpiar</Button>}
           </Stack>
         )}
+      />
+    </Stack>
+  );
+}
+
+function IntegrationsView({ token }: { token: string }) {
+  const integrations = useQuery({ queryKey: ["integrations", token], queryFn: () => api.integrations(token) });
+  if (integrations.isLoading) return <LinearProgress />;
+  if (!integrations.data) return <Alert severity="error">No se pudieron cargar las integraciones.</Alert>;
+  const grafana = integrations.data.grafana;
+  const nodeRed = integrations.data.node_red;
+  return (
+    <Stack spacing={2}>
+      <Alert severity="info">
+        Grafana y Node-RED son servicios auxiliares: observan, notifican y reportan. No controlan bombas, mÃ³dulos de campo ni salidas CODESYS.
+      </Alert>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">Grafana</Typography>
+              <Typography color="text.secondary">Tendencias, comparaciones, alarmas y diagnÃ³stico de plataforma.</Typography>
+              <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                <Chip label={grafana.enabled ? "habilitado" : "deshabilitado"} color={grafana.enabled ? "success" : "default"} />
+                <Chip label={grafana.control_allowed ? "control permitido" : "solo lectura"} color={grafana.control_allowed ? "error" : "info"} />
+              </Stack>
+              <Button href={grafana.base_path} target="_blank" sx={{ mt: 2 }}>Abrir Grafana</Button>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">Node-RED</Typography>
+              <Typography color="text.secondary">Notificaciones, reportes programados e integraciones externas.</Typography>
+              <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                <Chip label={nodeRed.enabled ? "habilitado" : "deshabilitado"} color={nodeRed.enabled ? "success" : "default"} />
+                <Chip label={nodeRed.control_allowed ? "control permitido" : "sin control directo"} color={nodeRed.control_allowed ? "error" : "info"} />
+              </Stack>
+              <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                <Button href={nodeRed.runtime_base_path} target="_blank">Runtime HTTP</Button>
+                <Button href={nodeRed.admin_base_path} target="_blank" color="warning">Editor admin</Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+      <Typography variant="h6">Dashboards Grafana provisionados</Typography>
+      <DataTable<GrafanaDashboard>
+        rows={grafana.dashboards}
+        columns={["uid", "title", "panels", "editable", "path"]}
+        renderActions={(dashboard) => <Button href={`${grafana.base_path}d/${dashboard.uid}`} target="_blank">Abrir</Button>}
+      />
+      <Typography variant="h6">Flujos Node-RED provisionados</Typography>
+      <DataTable<NodeRedFlow>
+        rows={nodeRed.flows}
+        columns={["id", "label", "disabled", "contains_control_keywords", "path"]}
       />
     </Stack>
   );

@@ -1,4 +1,4 @@
-import type { Alarm, AlarmRule, AuditEvent, Campaign, Column, Recipe, Summary, User } from "./types";
+import type { Alarm, AlarmRule, AuditEvent, Campaign, Column, IntegrationStatus, Recipe, Summary, User } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -80,6 +80,7 @@ export const api = {
     request<AlarmRule>("/alarm-rules", token, { method: "POST", body: JSON.stringify(payload) }),
   evaluateAlarmRules: (token: string) => request<Alarm[]>("/alarm-rules/evaluate", token, { method: "POST" }),
   exportAlarms: (token: string) => request<Record<string, unknown>>("/alarms/export", token),
+  integrations: (token: string) => request<IntegrationStatus>("/integrations", token),
   audit: (token: string) => request<AuditEvent[]>("/audit", token),
   users: (token: string) => request<User[]>("/users", token),
   createUser: (token: string, payload: { username: string; display_name: string; role_id: string; temporary_password: string }) =>
