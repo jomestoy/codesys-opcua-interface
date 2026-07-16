@@ -1,0 +1,11 @@
+{
+  "id": "CODESYS-OPCUA-01",
+  "endpoint_url": "opc.tcp://<codesys-runtime>:4840",
+  "namespace_uri": "urn:<codesys-project>:columnas",
+  "security_policy": "Basic256Sha256",
+  "security_mode": "SignAndEncrypt",
+  "polling_ms": 1000,
+  "real_io_enabled": false,
+  "write_authority": "Bloqueada",
+  "symbol_template": "ns=<validado>;s=GVL_Columns.C{column:03}.{signal}"
+}
