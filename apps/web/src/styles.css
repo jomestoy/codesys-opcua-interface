@@ -1,0 +1,38 @@
+body {
+  margin: 0;
+}
+
+.login-page {
+  align-items: center;
+  background:
+    radial-gradient(circle at top right, rgba(0, 163, 224, 0.28), transparent 28rem),
+    linear-gradient(135deg, #002f6c 0%, #0b1f3a 100%);
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.login-card {
+  max-width: 480px;
+  width: 100%;
+}
+
+.column-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+}
+
+.column-grid button {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  min-height: 64px;
+}
+
+.column-grid small {
+  font-size: 0.72rem;
+  margin-top: 0.25rem;
+  opacity: 0.85;
+}

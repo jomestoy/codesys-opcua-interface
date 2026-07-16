@@ -1,25 +1,34 @@
 # Web app
 
-Aplicacion React/TypeScript objetivo para la plataforma principal.
+Aplicacion React + TypeScript + Vite + Material UI para la plataforma principal.
 
-Estado actual en este repositorio: directorio preparado para portar la interfaz existente de la demo original. La regla de seguridad se mantiene: el frontend nunca escribe a dispositivos de campo; solo solicita comandos a la API.
+Estado Hito 4:
 
-Pantallas requeridas:
-
-- login;
+- login contra API;
 - resumen ejecutivo;
-- planta 200 columnas;
+- planta de 200 columnas por bloque;
 - detalle de columna;
-- recetas;
-- campanas;
-- alarmas;
-- tendencias/Grafana;
-- comunicaciones;
-- dispositivos;
-- mapa de I/O;
-- mantenimiento;
-- simulador;
-- usuarios/permisos;
-- auditoria;
-- estado sistema;
-- respaldo/restauracion.
+- solicitud de comandos por API (`start`, `pause`, `stop`, `set_flow`);
+- recetas con crear/aprobar;
+- campanas con crear/iniciar;
+- alarmas con reconocimiento;
+- usuarios con creacion y foto de perfil por URL;
+- auditoria.
+
+La regla de seguridad se mantiene: el frontend nunca escribe a dispositivos de campo; solo solicita comandos a la API. La API envia esas solicitudes al buzon OPC UA simulado/real para que CODESYS confirme.
+
+## Ejecutar
+
+```powershell
+cd apps/web
+npm install
+npm run dev
+```
+
+Variables:
+
+```text
+VITE_API_URL=http://localhost:8000
+```
+
+En este ambiente local no se ejecuto `npm install` porque Node/npm no estaban en PATH y no hay `node_modules` versionado. La fuente queda preparada para instalar dependencias y compilar.

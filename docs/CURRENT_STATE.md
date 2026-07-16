@@ -104,6 +104,12 @@ Pruebas ejecutadas despues de Hito 3:
 22 passed
 ```
 
+Pruebas ejecutadas despues de Hito 4:
+
+```text
+32 passed
+```
+
 Demo ejecutada:
 
 ```text
@@ -125,6 +131,17 @@ Estado Hito 3:
 - no se ha compilado ni importado en CODESYS Development System;
 - no existe binario `.project`;
 - el PLCopen XML generado es preliminar y debe validarse en CODESYS antes de usarlo en runtime real.
+
+Estado Hito 4:
+
+- API FastAPI funcional offline;
+- usuarios, roles, permisos, cambio de contrasena y foto de perfil;
+- endpoints de resumen, columnas, comandos, recetas, campanas, alarmas, auditoria y WebSocket;
+- comandos pasan por API hacia conector OPC UA simulado y reciben confirmacion CODESYS simulada;
+- frontend React/Vite/MUI implementado como fuente;
+- migracion SQL ampliada para modelos principales;
+- PostgreSQL/SQLAlchemy/Alembic reales siguen pendientes;
+- frontend no compilado por falta de dependencias Node instaladas en el ambiente.
 
 ### Gateway
 

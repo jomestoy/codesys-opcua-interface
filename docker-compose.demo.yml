@@ -1,11 +1,14 @@
 services:
-  platform-demo:
+  api:
     image: python:3.12-slim
     working_dir: /workspace
     volumes:
       - .:/workspace
+    ports:
+      - "8000:8000"
     environment:
       REAL_IO_ENABLED: "false"
+      DEMO_MODE: "true"
       CODESYS_ENDPOINT_PRIMARY: "opc.tcp://codesys-a:4840"
       CODESYS_ENDPOINT_SECONDARY: "opc.tcp://codesys-b:4840"
-    command: ["python", "-m", "codesys_opcua_interface.demo", "--columns", "200", "--ticks", "5"]
+    command: ["sh", "-lc", "python -m pip install -e . && python -m services.api.run"]

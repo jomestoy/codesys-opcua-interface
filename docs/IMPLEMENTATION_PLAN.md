@@ -78,13 +78,32 @@ Pendiente:
 
 ## Hito 4: plataforma web
 
+Estado: completado localmente como prototipo offline API + fuente frontend. Pendiente persistencia PostgreSQL real y build frontend.
+
 Entregables:
 
-- integrar/portar frontend y FastAPI;
-- modelos de datos;
-- API de comandos via buzon OPC UA;
-- WebSocket;
-- usuarios, roles, permisos, auditoria.
+- API FastAPI en `services/api/app.py`;
+- dominio demo en `codesys_opcua_interface/platform_store.py`;
+- modelos de datos principales en migracion SQL;
+- API de comandos via conector OPC UA simulado;
+- WebSocket `/ws/summary`;
+- usuarios, roles, permisos, auditoria;
+- frontend React/TypeScript/Vite/Material UI en `apps/web`;
+- pantallas base conectadas a API: login, resumen, planta, recetas, campanas, alarmas, usuarios y auditoria.
+
+Validacion:
+
+- `codesys-opcua-interface`: 32 tests passing.
+- `compileall`: OK.
+
+Pendiente:
+
+- instalar dependencias Node y compilar frontend;
+- reemplazar store en memoria por PostgreSQL + SQLAlchemy/Alembic;
+- configurar OIDC/JWT productivo;
+- Playwright;
+- servir frontend y API con reverse proxy;
+- historicos persistentes reales.
 
 ## Hito 5: recetas, campanas y alarmas
 

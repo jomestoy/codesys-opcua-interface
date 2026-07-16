@@ -17,7 +17,7 @@ Fecha de auditoria: 2026-07-15.
   - diagnostico local;
   - comandos nominales de red y dispositivos.
 - Tests unitarios actuales:
-  - `codesys-opcua-interface`: 22 tests.
+  - `codesys-opcua-interface`: 32 tests.
   - `column-gateway`: 7 tests.
 - Estimador matematico offline de flujo por regresion lineal.
 - PI lento offline.
@@ -26,6 +26,7 @@ Fecha de auditoria: 2026-07-15.
 - Conector OPC UA offline/simulado con seleccion de activo y bloqueo por doble activo.
 - Driver simulado del gateway con lectura/escritura en memoria.
 - Parser de referencia LP7516.
+- API FastAPI offline con autenticacion, permisos, columnas, comandos, recetas, campanas, alarmas, usuarios y auditoria.
 
 ## Que funciona solo offline
 
@@ -42,6 +43,8 @@ Fecha de auditoria: 2026-07-15.
 - Programa ST offline `PRG_ColumnControl` para 200 columnas.
 - Programa ST offline `PRG_Simulation` para escenarios de demo sin I/O real.
 - Generacion de PLCopen XML preliminar desde fuentes ST.
+- Backend web funcional en memoria, sin PostgreSQL real.
+- Frontend React/Vite/MUI como fuente no compilada en este ambiente.
 
 ## Que esta simulado
 
@@ -82,16 +85,15 @@ Fecha de auditoria: 2026-07-15.
 
 ## Que falta para la plataforma web
 
-- Migrar la aplicacion completa React/FastAPI existente al repositorio plataforma o integrarla como subarbol.
-- Persistencia PostgreSQL.
-- SQLAlchemy/Alembic.
-- WebSocket.
-- React Query.
-- Material UI.
-- Integracion Grafana por reverse proxy.
+- Persistencia PostgreSQL real.
+- SQLAlchemy/Alembic real.
+- Migrar el store en memoria a repositorios persistentes.
+- Compilar frontend con Node/npm y dependencias instaladas.
+- Integracion Grafana por reverse proxy dentro de la UI.
 - Integracion Node-RED restringida.
 - Pruebas Playwright.
-- Pantallas obligatorias conectadas a API real.
+- Completar pantallas restantes: tendencias, comunicaciones, dispositivos, mapa I/O, mantenimiento, simulador, estado sistema, backup/restore.
+- Hardening JWT/OIDC productivo.
 
 ## Que falta para CODESYS
 

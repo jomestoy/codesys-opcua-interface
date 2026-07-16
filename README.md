@@ -1,65 +1,80 @@
-# CODESYS OPC UA Interface
+# CODESYS OPC UA Platform
 
-Interface segura para integrar una plataforma operacional de columnas con un runtime CODESYS usando OPC UA.
+Plataforma operacional para control de columnas con CODESYS como autoridad final, comunicacion OPC UA segura y gateway Linux separado para campo.
 
-Este proyecto es una base independiente para publicar el perfil CODESYS/OPC UA, sus plantillas de nodos, validaciones offline y documentación de integración. No abre sesiones OPC UA reales ni escribe a PLC por defecto.
+Estado actual: prototipo offline integrado hasta Hito 4.
 
-## Estado
+## Principios de seguridad
 
-- Modo actual: plantilla/offline.
-- Escritura real: bloqueada.
-- Seguridad recomendada: OPC UA `Basic256Sha256` + `SignAndEncrypt`.
-- Producción: requiere certificados, símbolos CODESYS exportados, FAT/SAT y aprobación OT.
+- `REAL_IO_ENABLED=false` por defecto.
+- La web no escribe equipos de campo.
+- La API solicita comandos a CODESYS mediante buzon OPC UA.
+- CODESYS acepta, rechaza y confirma comandos.
+- Grafana y Node-RED no controlan equipos.
+- E-Stop y protecciones criticas deben ser fisicas e independientes.
 
-## Estructura
+## Componentes implementados
 
-```text
-codesys_opcua_interface/
-  profile.py              Perfil, nodos y validaciones offline
-config/
-  codesys-profile.example.json
-docs/
-  ARCHITECTURE.md
-  SECURITY.md
-tests/
-  test_profile.py
-```
+- Perfil y validacion OPC UA.
+- Conector OPC UA con primario/secundario simulado.
+- Modelo de comandos con TTL, sequence e idempotencia.
+- Fuente CODESYS Structured Text para 200 columnas.
+- PLCopen XML preliminar.
+- API FastAPI offline.
+- Usuarios, roles y permisos.
+- Recetas, campanas, alarmas y auditoria.
+- Frontend React/Vite/MUI como fuente.
+- Migracion SQL inicial ampliada.
 
-## Uso local
+## Ejecutar pruebas
 
 ```powershell
-python -m pip install -e .
 python -m pytest -q
-python -m codesys_opcua_interface.profile validate
-python -m codesys_opcua_interface.profile export
+python -m compileall codesys_opcua_interface services tests
 ```
 
-## Variables
-
-Copiar `.env.example` a `.env` si se integra con un runner propio:
+Resultado ultimo validado:
 
 ```text
-CODESYS_OPCUA_ENDPOINT=opc.tcp://<codesys-runtime>:4840
-CODESYS_OPCUA_NAMESPACE=urn:<codesys-project>:columnas
-CODESYS_OPCUA_SECURITY_POLICY=Basic256Sha256
-CODESYS_OPCUA_SECURITY_MODE=SignAndEncrypt
-REAL_IO_ENABLED=false
+32 passed
 ```
 
-## Símbolos propuestos
+## Ejecutar API demo
 
-Las rutas son plantillas; no son mapas finales:
-
-```text
-ns=<validado>;s=GVL_Columns.C{column:03}.InputWeightKg
-ns=<validado>;s=GVL_Columns.C{column:03}.OutputWeightKg
-ns=<validado>;s=GVL_Columns.C{column:03}.TemperaturePv
-ns=<validado>;s=GVL_Columns.C{column:03}.FlowSetpointLph
-ns=<validado>;s=GVL_Columns.C{column:03}.PumpOutputPct
-ns=<validado>;s=GVL_Columns.C{column:03}.Command
-ns=<validado>;s=GVL_System.Heartbeat
+```powershell
+python -m services.api.run
 ```
 
-## Próximo paso para hardware real
+Luego abrir:
 
-Implementar el cliente OPC UA real en el gateway, no en la interfaz web. El navegador nunca debe conectarse directamente al PLC.
+- API: `http://localhost:8000`
+- OpenAPI: `http://localhost:8000/docs`
+- credenciales demo: `http://localhost:8000/auth/demo-credentials`
+
+## Ejecutar frontend
+
+```powershell
+cd apps/web
+npm install
+npm run dev
+```
+
+En el entorno local de Codex no se compilo el frontend porque no habia dependencias Node instaladas. La fuente queda preparada para Vite.
+
+## Limitaciones conocidas
+
+- No validado en CODESYS Development System.
+- No validado contra runtime CODESYS real.
+- No hay PostgreSQL real conectado todavia.
+- No hay SQLAlchemy/Alembic operativo todavia.
+- No hay hardware Modbus/RS232 validado.
+- No hay build frontend verificado en este ambiente.
+- No hay Playwright todavia.
+
+Ver detalles en:
+
+- `docs/CURRENT_STATE.md`
+- `docs/GAP_ANALYSIS.md`
+- `docs/IMPLEMENTATION_PLAN.md`
+- `docs/WEB_PLATFORM.md`
+- `codesys-control/docs/CODESYS_CONTROL.md`

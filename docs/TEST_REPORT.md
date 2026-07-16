@@ -13,7 +13,7 @@ python -m pytest -q
 Resultado:
 
 ```text
-22 passed
+32 passed
 ```
 
 Cobertura funcional validada:
@@ -38,7 +38,13 @@ Cobertura funcional validada:
 - `REAL_IO_ENABLED=false` por defecto en `GVL_System.RealIoEnabled`;
 - enrutamiento del buzon OPC UA por `PRG_ColumnControl`;
 - bloqueo de simulacion cuando `RealIoEnabled=TRUE`;
-- generacion parseable de PLCopen XML preliminar.
+- generacion parseable de PLCopen XML preliminar;
+- dominio web/API con usuarios, permisos y 200 columnas;
+- login y token HMAC local;
+- flujo API de comandos hacia CODESYS simulado;
+- recetas y campanas funcionales;
+- creacion de usuarios y foto de perfil;
+- fuente frontend con stack React/Vite/MUI/React Query y rutas API requeridas.
 
 ## column-gateway
 
@@ -68,6 +74,9 @@ Cobertura funcional validada:
 - CODESYS real;
 - importacion/compilacion del XML PLCopen preliminar en CODESYS Development System;
 - OPC UA real con certificados;
+- PostgreSQL/SQLAlchemy/Alembic real;
+- build frontend con dependencias Node instaladas;
+- Playwright;
 - hardware Modbus/RS232;
 - systemd;
 - paquetes Debian instalados;
