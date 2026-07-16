@@ -1,0 +1,15 @@
+{
+  "real_io_enabled": false,
+  "codesys": {
+    "primary": "opc.tcp://codesys-a:4840",
+    "secondary": "opc.tcp://codesys-b:4840",
+    "namespace_uri": "urn:<codesys-project>:columnas",
+    "security_policy": "Basic256Sha256",
+    "security_mode": "SignAndEncrypt"
+  },
+  "commands": {
+    "ttl_seconds": 30,
+    "write_to_active_only": true,
+    "require_idempotency_key": true
+  }
+}

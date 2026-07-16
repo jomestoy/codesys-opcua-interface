@@ -1,0 +1,11 @@
+LogicalName,Direction,NodeTemplate,Unit,Notes
+InputWeightKg,Read,GVL_Columns.Columns[{column}].Status.InputScale.WeightKg,kg,Peso estanque alimentacion
+OutputWeightKg,Read,GVL_Columns.Columns[{column}].Status.OutputScale.WeightKg,kg,Peso salida
+FlowMeasuredKgH,Read,GVL_Columns.Columns[{column}].Status.FlowMeasuredKgH,kg/h,Calculado por CODESYS
+FlowSetpointKgH,ReadWriteGuarded,GVL_Columns.Columns[{column}].Config.FlowSetpointKgH,kg/h,Escritura solo por buzon validado
+PumpOutputPct,Read,GVL_Columns.Columns[{column}].Status.PumpOutputPct,%,Salida calculada CODESYS
+CommandMailbox,WriteGuarded,GVL_OPCUA.CommandMailbox,struct,Buzon de comandos
+CommandConfirmation,Read,GVL_OPCUA.CommandConfirmation,struct,Confirmacion CODESYS
+Heartbeat,Read,GVL_System.Heartbeat,cycles,Heartbeat runtime
+ControllerRole,Read,GVL_System.ControllerRole,enum,Primary/Secondary
+IsActive,Read,GVL_System.IsActive,bool,Solo activo acepta comandos

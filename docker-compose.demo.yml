@@ -1,0 +1,11 @@
+services:
+  platform-demo:
+    image: python:3.12-slim
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+    environment:
+      REAL_IO_ENABLED: "false"
+      CODESYS_ENDPOINT_PRIMARY: "opc.tcp://codesys-a:4840"
+      CODESYS_ENDPOINT_SECONDARY: "opc.tcp://codesys-b:4840"
+    command: ["python", "-m", "codesys_opcua_interface.demo", "--columns", "200", "--ticks", "5"]

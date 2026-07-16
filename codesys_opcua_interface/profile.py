@@ -34,6 +34,8 @@ NODE_TEMPLATES: list[NodeTemplate] = [
 
 def build_profile() -> dict[str, Any]:
     endpoint = os.getenv("CODESYS_OPCUA_ENDPOINT", "opc.tcp://<codesys-runtime>:4840")
+    primary = os.getenv("CODESYS_ENDPOINT_PRIMARY", endpoint)
+    secondary = os.getenv("CODESYS_ENDPOINT_SECONDARY", "opc.tcp://<codesys-standby>:4840")
     namespace = os.getenv("CODESYS_OPCUA_NAMESPACE", "urn:<codesys-project>:columnas")
     profile = {
         "id": "CODESYS-OPCUA-01",
@@ -42,6 +44,12 @@ def build_profile() -> dict[str, Any]:
         "server_role": "CODESYS OPC UA Server",
         "client_role": "Gateway/API como OPC UA client",
         "endpoint_url": endpoint,
+        "endpoints": {
+            "primary": primary,
+            "secondary": secondary,
+            "active_detection": ["IsActive", "ControllerRole", "ControlAuthority", "Heartbeat"],
+            "write_rule": "write_to_active_only",
+        },
         "namespace_uri": namespace,
         "security_policy": os.getenv("CODESYS_OPCUA_SECURITY_POLICY", "Basic256Sha256"),
         "security_mode": os.getenv("CODESYS_OPCUA_SECURITY_MODE", "SignAndEncrypt"),
@@ -49,6 +57,10 @@ def build_profile() -> dict[str, Any]:
         "real_io_enabled": REAL_IO_ENABLED,
         "write_authority": "Bloqueada",
         "nodes": [asdict(node) for node in NODE_TEMPLATES],
+        "command_mailbox": {
+            "fields": ["CommandId", "ColumnId", "CommandType", "RequestedValue", "RequestedBy", "RequestedAt", "ExpiresAt", "Sequence", "Status", "Result", "AppliedAt"],
+            "statuses": ["Pending", "Accepted", "Rejected", "Applied", "Expired", "Failed"],
+        },
         "command_flow": [
             "Operador solicita cambio en interfaz",
             "API valida permiso, rango, receta/campana y auditoria",

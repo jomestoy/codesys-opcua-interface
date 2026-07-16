@@ -1,0 +1,9 @@
+[
+  {
+    "id": "notifications-flow",
+    "type": "tab",
+    "label": "Notificaciones sin control",
+    "disabled": false,
+    "info": "Flujo reservado para correo/Teams/reportes. No controla equipos."
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "title": "Columnas - resumen operacional",
+  "timezone": "browser",
+  "panels": [
+    {"type": "stat", "title": "Columnas ejecutando", "targets": [{"expr": "columns_running"}]},
+    {"type": "timeseries", "title": "Flujo gravimetrico", "targets": [{"expr": "flow_measured_kg_h"}]},
+    {"type": "timeseries", "title": "Calidad de datos", "targets": [{"expr": "data_quality"}]}
+  ],
+  "editable": false
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ColumnCommand",
+  "type": "object",
+  "required": ["CommandId", "ColumnId", "CommandType", "RequestedBy", "RequestedAt", "ExpiresAt", "Sequence", "Status"],
+  "properties": {
+    "CommandId": {"type": "string"},
+    "ColumnId": {"type": "integer", "minimum": 1, "maximum": 200},
+    "CommandType": {"type": "string", "enum": ["start", "pause", "stop", "set_flow", "declare_refill", "tare", "change_vessel", "maintenance"]},
+    "RequestedValue": {},
+    "RequestedBy": {"type": "string"},
+    "RequestedAt": {"type": "string", "format": "date-time"},
+    "ExpiresAt": {"type": "string", "format": "date-time"},
+    "Sequence": {"type": "integer", "minimum": 1},
+    "Status": {"type": "string", "enum": ["Pending", "Accepted", "Rejected", "Applied", "Expired", "Failed"]},
+    "Result": {"type": "string"},
+    "AppliedAt": {"type": ["string", "null"], "format": "date-time"}
+  }
+}
