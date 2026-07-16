@@ -178,13 +178,33 @@ Pendiente:
 
 ## Hito 8: empaquetado
 
+Estado: completado localmente como empaquetado demo/plataforma y generacion offline de paquetes gateway. Pendiente validacion Linux real.
+
 Entregables:
 
-- Docker demo;
-- systemd;
-- scripts de instalacion;
-- paquetes `.deb` cuando el entorno Linux este disponible;
-- tarballs portables.
+- Docker Compose demo para Web, API, PostgreSQL, Grafana, Node-RED y reverse proxy;
+- migracion/seed de observabilidad para dashboards;
+- backup y restore seguro de configuracion demo;
+- `make package-gateway` delegado al repositorio `column-gateway`;
+- en `column-gateway`: tarballs portables amd64/arm64;
+- en `column-gateway`: paquetes `.deb` estructurales amd64/arm64;
+- en `column-gateway`: scripts install/update/uninstall/rollback/diagnose;
+- en `column-gateway`: unidad systemd incluida.
+
+Validacion:
+
+- `codesys-opcua-interface`: 45 tests passing.
+- `column-gateway`: 16 tests passing.
+- `column-gateway/dist/column-gateway_0.8.0_{amd64,arm64}.{tar.gz,deb}` generado localmente.
+
+Pendiente:
+
+- ejecutar Docker Compose con imagenes reales;
+- instalar `.deb` en Linux con `dpkg`;
+- validar `systemd`;
+- validar rollback en Linux;
+- generar paquetes firmados en CI;
+- crear usuario PostgreSQL readonly real para Grafana en produccion.
 
 ## Hito 9: pruebas
 

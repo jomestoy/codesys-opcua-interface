@@ -29,7 +29,7 @@
       "title": "Peso estanque entrada",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
       "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
-      "targets": [{"refId": "A", "format": "time_series", "rawSql": "select ts as time, concat('C', column_id) as metric, value from historical_series where variable = 'input_weight_kg' and column_id in (${column_id:csv}) order by ts"}],
+      "targets": [{"refId": "A", "format": "time_series", "rawSql": "select series_time as time, concat('C', column_id) as metric, value from historical_series where variable = 'input_weight_kg' and column_id in (${column_id:csv}) order by series_time"}],
       "fieldConfig": {"defaults": {"unit": "kg"}, "overrides": []}
     },
     {
@@ -39,8 +39,8 @@
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
       "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
       "targets": [
-        {"refId": "A", "format": "time_series", "rawSql": "select ts as time, concat('PV C', column_id) as metric, value from historical_series where variable = 'flow_measured_kg_h' and column_id in (${column_id:csv}) order by ts"},
-        {"refId": "B", "format": "time_series", "rawSql": "select ts as time, concat('SP C', column_id) as metric, value from historical_series where variable = 'flow_setpoint_kg_h' and column_id in (${column_id:csv}) order by ts"}
+        {"refId": "A", "format": "time_series", "rawSql": "select series_time as time, concat('PV C', column_id) as metric, value from historical_series where variable = 'flow_measured_kg_h' and column_id in (${column_id:csv}) order by series_time"},
+        {"refId": "B", "format": "time_series", "rawSql": "select series_time as time, concat('SP C', column_id) as metric, value from historical_series where variable = 'flow_setpoint_kg_h' and column_id in (${column_id:csv}) order by series_time"}
       ],
       "fieldConfig": {"defaults": {"unit": "kg/h"}, "overrides": []}
     },
@@ -50,7 +50,7 @@
       "title": "Mando de bomba",
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
       "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
-      "targets": [{"refId": "A", "format": "time_series", "rawSql": "select ts as time, concat('C', column_id) as metric, value from historical_series where variable = 'pump_output_pct' and column_id in (${column_id:csv}) order by ts"}],
+      "targets": [{"refId": "A", "format": "time_series", "rawSql": "select series_time as time, concat('C', column_id) as metric, value from historical_series where variable = 'pump_output_pct' and column_id in (${column_id:csv}) order by series_time"}],
       "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}, "overrides": []}
     },
     {
@@ -60,8 +60,8 @@
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
       "datasource": {"type": "postgres", "uid": "platform-postgres-readonly"},
       "targets": [
-        {"refId": "A", "format": "time_series", "rawSql": "select ts as time, concat('PV C', column_id) as metric, value from historical_series where variable = 'temperature_pv_c' and column_id in (${column_id:csv}) order by ts"},
-        {"refId": "B", "format": "time_series", "rawSql": "select ts as time, concat('SP C', column_id) as metric, value from historical_series where variable = 'temperature_setpoint_c' and column_id in (${column_id:csv}) order by ts"}
+        {"refId": "A", "format": "time_series", "rawSql": "select series_time as time, concat('PV C', column_id) as metric, value from historical_series where variable = 'temperature_pv_c' and column_id in (${column_id:csv}) order by series_time"},
+        {"refId": "B", "format": "time_series", "rawSql": "select series_time as time, concat('SP C', column_id) as metric, value from historical_series where variable = 'temperature_setpoint_c' and column_id in (${column_id:csv}) order by series_time"}
       ],
       "fieldConfig": {"defaults": {"unit": "celsius"}, "overrides": []}
     }

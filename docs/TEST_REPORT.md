@@ -13,7 +13,7 @@ python -m pytest -q
 Resultado:
 
 ```text
-36 passed
+45 passed
 ```
 
 Cobertura funcional validada:
@@ -48,6 +48,8 @@ Cobertura funcional validada:
 - recetas Hito 5: clonar, rechazar, editar, aprobar, comparar, asignar y obsoletar;
 - campanas Hito 5: programar, iniciar, pausar, finalizar, cancelar, comparar y exportar;
 - alarmas Hito 5: reglas configurables, evaluacion, historial, reconocimiento, limpieza y exportacion.
+- integraciones Hito 7: Grafana/Node-RED sin autoridad de control;
+- empaquetado Hito 8: Docker Compose demo, backup/restore seguro y queries Grafana alineadas al esquema.
 
 ## column-gateway
 
@@ -60,7 +62,7 @@ python -m pytest -q
 Resultado:
 
 ```text
-7 passed
+16 passed
 ```
 
 Cobertura funcional validada:
@@ -71,6 +73,8 @@ Cobertura funcional validada:
 - buffer FIFO;
 - servicio gateway con dispositivo simulado;
 - parser de referencia LP7516.
+- paquetes Hito 8: tarballs y `.deb` estructurales amd64/arm64;
+- CLI `version` y `update` con validacion de argumentos.
 
 ## No validado en este ambiente
 
@@ -85,3 +89,5 @@ Cobertura funcional validada:
 - paquetes Debian instalados;
 - red dual NIC/nftables;
 - Grafana/Node-RED ejecutandose.
+- Docker Compose demo completo ejecutandose.
+- Instalacion real de paquetes `.deb`.

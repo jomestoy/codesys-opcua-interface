@@ -122,6 +122,12 @@ Pruebas ejecutadas despues de Hito 7:
 41 passed
 ```
 
+Pruebas ejecutadas despues de Hito 8:
+
+```text
+45 passed
+```
+
 Demo ejecutada:
 
 ```text
@@ -173,6 +179,17 @@ Estado Hito 7:
 - reverse proxy publica Web/API/Grafana/Node-RED runtime;
 - API y frontend exponen estado de integraciones con `control_allowed=false`;
 - no se validaron contenedores reales ni conexion a PostgreSQL real en este ambiente.
+
+Estado Hito 8:
+
+- `docker-compose.demo.yml` define Web, API, PostgreSQL, Grafana, Node-RED y reverse proxy;
+- PostgreSQL demo inicializa migraciones y seeds, incluyendo observabilidad para Grafana;
+- dashboards Grafana fueron alineados con el esquema demo;
+- `Makefile` tiene comandos `demo`, `stop`, `reset-demo`, `backup`, `restore` y `package-gateway`;
+- backup/restore demo valida rutas y bloquea path traversal;
+- comandos de push pendientes quedaron documentados en `docs/GIT_PUSH_PENDING.md`;
+- el empaquetado real del gateway vive en el repositorio `column-gateway`;
+- no se validaron Docker, dpkg ni systemd reales en este ambiente.
 
 ### Gateway
 

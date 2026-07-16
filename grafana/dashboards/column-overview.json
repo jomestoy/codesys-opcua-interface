@@ -115,7 +115,7 @@
         {
           "refId": "A",
           "format": "time_series",
-          "rawSql": "select ts as time, concat('Bloque ', block_id) as metric, avg(value) as value from historical_series where variable = 'flow_measured_kg_h' group by ts, block_id order by ts"
+          "rawSql": "select hs.series_time as time, concat('Bloque ', c.block_id) as metric, avg(hs.value) as value from historical_series hs join columns c on c.id = hs.column_id where hs.variable = 'flow_measured_kg_h' group by hs.series_time, c.block_id order by hs.series_time"
         }
       ],
       "fieldConfig": {"defaults": {"unit": "kg/h"}, "overrides": []}
@@ -130,7 +130,7 @@
         {
           "refId": "A",
           "format": "time_series",
-          "rawSql": "select ts as time, concat('Bloque ', block_id) as metric, avg(value) as value from historical_series where variable = 'data_quality' group by ts, block_id order by ts"
+          "rawSql": "select hs.series_time as time, concat('Bloque ', c.block_id) as metric, avg(hs.value) as value from historical_series hs join columns c on c.id = hs.column_id where hs.variable = 'data_quality' group by hs.series_time, c.block_id order by hs.series_time"
         }
       ],
       "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}, "overrides": []}

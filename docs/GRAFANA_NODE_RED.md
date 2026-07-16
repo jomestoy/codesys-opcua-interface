@@ -42,7 +42,7 @@ Restricciones:
 
 Limitacion:
 
-- los dashboards estan listos para PostgreSQL real, pero en el ambiente actual la plataforma sigue usando store en memoria. Por eso Grafana queda provisionado, no validado contra series historicas reales.
+- los dashboards estan listos para PostgreSQL demo y para PostgreSQL real con el mismo esquema base. En el ambiente actual no se levantaron contenedores, por lo que Grafana queda provisionado y validado por fuente, no por ejecucion visual.
 
 ## Node-RED
 
