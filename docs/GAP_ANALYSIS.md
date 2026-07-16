@@ -17,7 +17,7 @@ Fecha de auditoria: 2026-07-15.
   - diagnostico local;
   - comandos nominales de red y dispositivos.
 - Tests unitarios actuales:
-  - `codesys-opcua-interface`: 32 tests.
+  - `codesys-opcua-interface`: 36 tests.
   - `column-gateway`: 7 tests.
 - Estimador matematico offline de flujo por regresion lineal.
 - PI lento offline.
@@ -27,6 +27,7 @@ Fecha de auditoria: 2026-07-15.
 - Driver simulado del gateway con lectura/escritura en memoria.
 - Parser de referencia LP7516.
 - API FastAPI offline con autenticacion, permisos, columnas, comandos, recetas, campanas, alarmas, usuarios y auditoria.
+- Flujos offline/API de recetas, campanas y alarmas Hito 5.
 
 ## Que funciona solo offline
 
@@ -45,6 +46,7 @@ Fecha de auditoria: 2026-07-15.
 - Generacion de PLCopen XML preliminar desde fuentes ST.
 - Backend web funcional en memoria, sin PostgreSQL real.
 - Frontend React/Vite/MUI como fuente no compilada en este ambiente.
+- Recetas/campanas/alarmas funcionales en memoria y simulacion.
 
 ## Que esta simulado
 
@@ -93,6 +95,7 @@ Fecha de auditoria: 2026-07-15.
 - Integracion Node-RED restringida.
 - Pruebas Playwright.
 - Completar pantallas restantes: tendencias, comunicaciones, dispositivos, mapa I/O, mantenimiento, simulador, estado sistema, backup/restore.
+- Persistir Hito 5 en PostgreSQL real.
 - Hardening JWT/OIDC productivo.
 
 ## Que falta para CODESYS

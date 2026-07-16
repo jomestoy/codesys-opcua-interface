@@ -29,6 +29,12 @@ Implementado en `services/api/app.py`:
 - WebSocket `/ws/summary`;
 - `REAL_IO_ENABLED=false` por defecto.
 
+Implementado en Hito 5:
+
+- recetas: editar, clonar, aprobar, rechazar, obsoletar, comparar y asignar;
+- campanas: programar, iniciar, pausar, finalizar, cancelar, comparar y exportar;
+- alarmas: reglas configurables por variable/umbral/alcance, evaluacion, historial, reconocimiento, limpieza y exportacion.
+
 ## Ejecutar
 
 ```powershell

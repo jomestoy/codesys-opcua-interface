@@ -28,7 +28,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type Session } from "./api";
-import type { Alarm, Campaign, Column, Recipe, Summary, User } from "./types";
+import type { Alarm, AlarmRule, Campaign, Column, Recipe, Summary, User } from "./types";
 
 const sessionKey = "codesys-platform-session";
 
@@ -238,14 +238,36 @@ function RecipesView({ token }: { token: string }) {
   const recipes = useQuery({ queryKey: ["recipes", token], queryFn: () => api.recipes(token) });
   const [name, setName] = useState("Nueva receta");
   const [flow, setFlow] = useState("12");
+  const [assignColumns, setAssignColumns] = useState("1,2,3");
+  const [comparison, setComparison] = useState<Record<string, unknown> | null>(null);
   const create = useMutation({
     mutationFn: () => api.createRecipe(token, { name, flow_setpoint_kg_h: Number(flow), temperature_setpoint_c: 25, aeration_enabled: true }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] })
+  });
+  const clone = useMutation({
+    mutationFn: (id: string) => api.cloneRecipe(token, id, { change_note: "clonada desde UI" }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] })
   });
   const approve = useMutation({
     mutationFn: (id: string) => api.approveRecipe(token, id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] })
   });
+  const reject = useMutation({
+    mutationFn: (id: string) => api.rejectRecipe(token, id, "rechazada desde UI para revision"),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] })
+  });
+  const obsolete = useMutation({
+    mutationFn: (id: string) => api.obsoleteRecipe(token, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recipes"] })
+  });
+  const assign = useMutation({
+    mutationFn: (id: string) => api.assignRecipe(token, id, parseCsvNumbers(assignColumns)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["columns"] })
+  });
+  const compareFirstTwo = async () => {
+    const items = recipes.data ?? [];
+    if (items.length >= 2) setComparison(await api.compareRecipes(token, items[0].id, items[1].id));
+  };
   return (
     <Stack spacing={2}>
       <Paper sx={{ p: 2 }}>
@@ -253,13 +275,24 @@ function RecipesView({ token }: { token: string }) {
         <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mt: 1 }}>
           <TextField label="Nombre" value={name} onChange={(event) => setName(event.target.value)} />
           <TextField label="Flujo kg/h" value={flow} onChange={(event) => setFlow(event.target.value)} />
+          <TextField label="Columnas asignación" value={assignColumns} onChange={(event) => setAssignColumns(event.target.value)} />
           <Button variant="contained" onClick={() => create.mutate()}>Crear borrador</Button>
+          <Button variant="outlined" onClick={compareFirstTwo}>Comparar 2 primeras</Button>
         </Stack>
       </Paper>
+      {comparison && <Alert severity="info">Comparación: {JSON.stringify(comparison["differences"])}</Alert>}
       <DataTable
         rows={recipes.data ?? []}
-        columns={["id", "name", "version", "status", "flow_setpoint_kg_h", "approved_by"]}
-        renderActions={(recipe: Recipe) => recipe.status !== "approved" && <Button onClick={() => approve.mutate(recipe.id)}>Aprobar</Button>}
+        columns={["id", "name", "version", "status", "flow_setpoint_kg_h", "approved_by", "rejected_reason"]}
+        renderActions={(recipe: Recipe) => (
+          <Stack direction="row" spacing={1}>
+            <Button onClick={() => clone.mutate(recipe.id)}>Clonar</Button>
+            {recipe.status !== "approved" && <Button onClick={() => approve.mutate(recipe.id)}>Aprobar</Button>}
+            {recipe.status !== "rejected" && recipe.status !== "obsolete" && <Button onClick={() => reject.mutate(recipe.id)}>Rechazar</Button>}
+            {recipe.status === "approved" && <Button color="warning" onClick={() => obsolete.mutate(recipe.id)}>Obsoletar</Button>}
+            {recipe.status === "approved" && <Button onClick={() => assign.mutate(recipe.id)}>Asignar</Button>}
+          </Stack>
+        )}
       />
     </Stack>
   );
@@ -272,18 +305,37 @@ function CampaignsView({ token }: { token: string }) {
   const [name, setName] = useState("Nueva campaña");
   const [recipeId, setRecipeId] = useState("REC-DEMO-001");
   const [columns, setColumns] = useState("1,2,3");
+  const [scheduledStart, setScheduledStart] = useState("2026-07-20T08:00:00Z");
+  const [campaignExport, setCampaignExport] = useState<Record<string, unknown> | null>(null);
   const create = useMutation({
     mutationFn: () => api.createCampaign(token, {
       name,
       recipe_id: recipeId,
-      column_ids: columns.split(",").map((value) => Number(value.trim())).filter(Boolean)
+      column_ids: parseCsvNumbers(columns)
     }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
+  });
+  const schedule = useMutation({
+    mutationFn: (id: string) => api.scheduleCampaign(token, id, scheduledStart),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
   });
   const start = useMutation({
     mutationFn: (id: string) => api.startCampaign(token, id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
   });
+  const pause = useMutation({
+    mutationFn: (id: string) => api.pauseCampaign(token, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
+  });
+  const finish = useMutation({
+    mutationFn: (id: string) => api.finishCampaign(token, id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
+  });
+  const cancel = useMutation({
+    mutationFn: (id: string) => api.cancelCampaign(token, id, "cancelada desde UI"),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["campaigns"] })
+  });
+  const exportCampaign = async (id: string) => setCampaignExport(await api.exportCampaign(token, id));
   return (
     <Stack spacing={2}>
       <Paper sx={{ p: 2 }}>
@@ -296,13 +348,24 @@ function CampaignsView({ token }: { token: string }) {
             ))}
           </TextField>
           <TextField label="Columnas CSV" value={columns} onChange={(event) => setColumns(event.target.value)} />
+          <TextField label="Programación ISO" value={scheduledStart} onChange={(event) => setScheduledStart(event.target.value)} />
           <Button variant="contained" onClick={() => create.mutate()}>Crear</Button>
         </Stack>
       </Paper>
+      {campaignExport && <Alert severity="info">Export campaña: {JSON.stringify(campaignExport["summary"])}</Alert>}
       <DataTable
         rows={campaigns.data ?? []}
-        columns={["id", "name", "status", "recipe_id", "column_ids"]}
-        renderActions={(campaign: Campaign) => campaign.status !== "running" && <Button onClick={() => start.mutate(campaign.id)}>Iniciar</Button>}
+        columns={["id", "name", "status", "recipe_id", "column_ids", "scheduled_start"]}
+        renderActions={(campaign: Campaign) => (
+          <Stack direction="row" spacing={1}>
+            <Button onClick={() => schedule.mutate(campaign.id)}>Programar</Button>
+            {campaign.status !== "running" && <Button onClick={() => start.mutate(campaign.id)}>Iniciar</Button>}
+            {campaign.status === "running" && <Button onClick={() => pause.mutate(campaign.id)}>Pausar</Button>}
+            {campaign.status !== "finished" && <Button onClick={() => finish.mutate(campaign.id)}>Finalizar</Button>}
+            {campaign.status !== "cancelled" && <Button color="warning" onClick={() => cancel.mutate(campaign.id)}>Cancelar</Button>}
+            <Button onClick={() => exportCampaign(campaign.id)}>Exportar</Button>
+          </Stack>
+        )}
       />
     </Stack>
   );
@@ -311,16 +374,63 @@ function CampaignsView({ token }: { token: string }) {
 function AlarmsView({ token }: { token: string }) {
   const queryClient = useQueryClient();
   const alarms = useQuery({ queryKey: ["alarms", token], queryFn: () => api.alarms(token) });
+  const rules = useQuery({ queryKey: ["alarm-rules", token], queryFn: () => api.alarmRules(token) });
+  const [ruleName, setRuleName] = useState("Calidad baja");
+  const [threshold, setThreshold] = useState("0.5");
+  const [targetColumns, setTargetColumns] = useState("42");
   const ack = useMutation({
-    mutationFn: (id: string) => api.ackAlarm(token, id),
+    mutationFn: (id: string) => api.ackAlarm(token, id, "Reconocida desde UI"),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["alarms"] })
   });
+  const clear = useMutation({
+    mutationFn: (id: string) => api.clearAlarm(token, id, "Limpieza desde UI"),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["alarms"] })
+  });
+  const createRule = useMutation({
+    mutationFn: () => api.createAlarmRule(token, {
+      name: ruleName,
+      variable: "data_quality",
+      operator: "lt",
+      threshold: Number(threshold),
+      priority: "critical",
+      action: "notify",
+      target_scope: "columns",
+      column_ids: parseCsvNumbers(targetColumns),
+      enabled: true
+    }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["alarm-rules"] })
+  });
+  const evaluate = useMutation({
+    mutationFn: () => api.evaluateAlarmRules(token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["alarms"] });
+      queryClient.invalidateQueries({ queryKey: ["alarm-rules"] });
+    }
+  });
   return (
-    <DataTable
-      rows={alarms.data ?? []}
-      columns={["id", "column_id", "severity", "code", "message", "active", "acknowledged_by"]}
-      renderActions={(alarm: Alarm) => alarm.active && !alarm.acknowledged_by && <Button onClick={() => ack.mutate(alarm.id)}>Reconocer</Button>}
-    />
+    <Stack spacing={2}>
+      <Paper sx={{ p: 2 }}>
+        <Typography variant="h6">Configuración de alarmas</Typography>
+        <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ mt: 1 }}>
+          <TextField label="Nombre regla" value={ruleName} onChange={(event) => setRuleName(event.target.value)} />
+          <TextField label="Umbral calidad" value={threshold} onChange={(event) => setThreshold(event.target.value)} />
+          <TextField label="Columnas CSV" value={targetColumns} onChange={(event) => setTargetColumns(event.target.value)} />
+          <Button variant="contained" onClick={() => createRule.mutate()}>Crear regla</Button>
+          <Button variant="outlined" onClick={() => evaluate.mutate()}>Evaluar reglas</Button>
+        </Stack>
+      </Paper>
+      <DataTable rows={rules.data ?? []} columns={["id", "name", "variable", "operator", "threshold", "priority", "target_scope", "version", "enabled"]} />
+      <DataTable
+        rows={alarms.data ?? []}
+        columns={["id", "column_id", "severity", "code", "message", "active", "acknowledged_by", "comment"]}
+        renderActions={(alarm: Alarm) => (
+          <Stack direction="row" spacing={1}>
+            {alarm.active && !alarm.acknowledged_by && <Button onClick={() => ack.mutate(alarm.id)}>Reconocer</Button>}
+            {alarm.active && <Button color="warning" onClick={() => clear.mutate(alarm.id)}>Limpiar</Button>}
+          </Stack>
+        )}
+      />
+    </Stack>
   );
 }
 
@@ -464,4 +574,8 @@ function formatCell(value: unknown): string {
   if (value === null || value === undefined) return "";
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
+}
+
+function parseCsvNumbers(value: string): number[] {
+  return value.split(",").map((item) => Number(item.trim())).filter(Boolean);
 }

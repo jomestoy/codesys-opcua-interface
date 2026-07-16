@@ -10,8 +10,9 @@ Estado Hito 4:
 - detalle de columna;
 - solicitud de comandos por API (`start`, `pause`, `stop`, `set_flow`);
 - recetas con crear/aprobar;
-- campanas con crear/iniciar;
-- alarmas con reconocimiento;
+- recetas con crear, clonar, aprobar, rechazar, obsoletar, comparar y asignar;
+- campanas con crear, programar, iniciar, pausar, finalizar, cancelar y exportar;
+- alarmas con reglas configurables, evaluacion, reconocimiento y limpieza;
 - usuarios con creacion y foto de perfil por URL;
 - auditoria.
 

@@ -107,14 +107,35 @@ Pendiente:
 
 ## Hito 5: recetas, campanas y alarmas
 
+Estado: completado localmente como flujo funcional offline/API + fuente frontend. Pendiente persistencia real y pruebas UI automatizadas.
+
 Entregables:
 
 - versionamiento;
 - aprobacion;
+- rechazo;
+- obsolescencia;
+- clonacion;
+- comparacion;
 - asignacion;
-- ejecucion simulada;
-- alarmas configurables con limites autorizados;
+- ciclo de campana: programar, iniciar, pausar, finalizar, cancelar;
+- exportacion y comparacion de campanas;
+- alarmas configurables con limites autorizados, alcance all/columns/block y version;
+- historial de alarmas;
+- reconocimiento, comentario, limpieza y exportacion;
 - auditoria.
+
+Validacion:
+
+- `codesys-opcua-interface`: 36 tests passing.
+- `compileall`: OK.
+
+Pendiente:
+
+- persistir estos flujos en PostgreSQL real;
+- integrar historicos reales de proceso;
+- Playwright para flujo completo UI;
+- control critico de alarmas en CODESYS real.
 
 ## Hito 6: gateway
 

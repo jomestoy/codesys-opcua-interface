@@ -13,7 +13,7 @@ python -m pytest -q
 Resultado:
 
 ```text
-32 passed
+36 passed
 ```
 
 Cobertura funcional validada:
@@ -44,7 +44,10 @@ Cobertura funcional validada:
 - flujo API de comandos hacia CODESYS simulado;
 - recetas y campanas funcionales;
 - creacion de usuarios y foto de perfil;
-- fuente frontend con stack React/Vite/MUI/React Query y rutas API requeridas.
+- fuente frontend con stack React/Vite/MUI/React Query y rutas API requeridas;
+- recetas Hito 5: clonar, rechazar, editar, aprobar, comparar, asignar y obsoletar;
+- campanas Hito 5: programar, iniciar, pausar, finalizar, cancelar, comparar y exportar;
+- alarmas Hito 5: reglas configurables, evaluacion, historial, reconocimiento, limpieza y exportacion.
 
 ## column-gateway
 

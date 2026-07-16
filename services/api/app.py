@@ -42,12 +42,76 @@ class RecipeRequest(BaseModel):
     flow_setpoint_kg_h: float = Field(ge=0, le=100)
     temperature_setpoint_c: float = Field(default=25.0, ge=0, le=90)
     aeration_enabled: bool = True
+    change_note: str = ""
+
+
+class RecipeUpdateRequest(BaseModel):
+    name: str | None = None
+    flow_setpoint_kg_h: float | None = Field(default=None, ge=0, le=100)
+    temperature_setpoint_c: float | None = Field(default=None, ge=0, le=90)
+    aeration_enabled: bool | None = None
+    change_note: str | None = None
+
+
+class RecipeCloneRequest(BaseModel):
+    name: str | None = None
+    change_note: str = ""
+
+
+class RejectRequest(BaseModel):
+    reason: str
+
+
+class AssignRecipeRequest(BaseModel):
+    column_ids: list[int]
 
 
 class CampaignRequest(BaseModel):
     name: str
     recipe_id: str
     column_ids: list[int]
+    scheduled_start: str | None = None
+    notes: str = ""
+
+
+class CampaignScheduleRequest(BaseModel):
+    scheduled_start: str | None = None
+
+
+class CampaignCancelRequest(BaseModel):
+    reason: str = ""
+
+
+class AlarmRuleRequest(BaseModel):
+    name: str
+    variable: str
+    operator: str = "gt"
+    threshold: float
+    hysteresis: float = 0.0
+    delay_s: int = 0
+    priority: str = "warning"
+    action: str = "notify"
+    target_scope: str = "all"
+    column_ids: list[int] = []
+    enabled: bool = True
+
+
+class AlarmRuleUpdateRequest(BaseModel):
+    name: str | None = None
+    variable: str | None = None
+    operator: str | None = None
+    threshold: float | None = None
+    hysteresis: float | None = None
+    delay_s: int | None = None
+    priority: str | None = None
+    action: str | None = None
+    target_scope: str | None = None
+    column_ids: list[int] | None = None
+    enabled: bool | None = None
+
+
+class AlarmActionRequest(BaseModel):
+    comment: str = ""
 
 
 class UserCreateRequest(BaseModel):
@@ -74,7 +138,7 @@ def create_app(
     token_manager = token_manager or TokenManager(secret=os.getenv("API_TOKEN_SECRET"))
     service = service or PlatformService(store, build_demo_connector())
 
-    app = FastAPI(title="CODESYS OPC UA Platform API", version="0.4.0-hito4")
+    app = FastAPI(title="CODESYS OPC UA Platform API", version="0.5.0-hito5")
     app.state.store = store
     app.state.token_manager = token_manager
     app.state.service = service
@@ -253,11 +317,61 @@ def create_app(
         except (PermissionDenied, ValueError) as exc:
             raise _http_error(exc)
 
+    @app.get("/recipes/compare")
+    def compare_recipes(left_id: str, right_id: str, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.compare_recipes(user, left_id, right_id)
+        except (PermissionDenied, NotFound) as exc:
+            raise _http_error(exc)
+
+    @app.get("/recipes/{recipe_id}")
+    def recipe_detail(recipe_id: str, user=Depends(current_user)) -> dict[str, Any]:
+        store.require_permission(user, "recipes.read")
+        recipe = store.recipes.get(recipe_id)
+        if not recipe:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "receta no existe")
+        return recipe.to_dict()
+
+    @app.patch("/recipes/{recipe_id}")
+    def update_recipe(recipe_id: str, request: RecipeUpdateRequest, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.update_recipe(user, recipe_id, _model_dump(request)).to_dict()
+        except (PermissionDenied, NotFound, ValueError) as exc:
+            raise _http_error(exc)
+
+    @app.post("/recipes/{recipe_id}/clone")
+    def clone_recipe(recipe_id: str, request: RecipeCloneRequest, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.clone_recipe(user, recipe_id, _model_dump(request)).to_dict()
+        except (PermissionDenied, NotFound, ValueError) as exc:
+            raise _http_error(exc)
+
     @app.post("/recipes/{recipe_id}/approve")
     def approve_recipe(recipe_id: str, user=Depends(current_user)) -> dict[str, Any]:
         try:
             return store.approve_recipe(user, recipe_id).to_dict()
         except (PermissionDenied, NotFound) as exc:
+            raise _http_error(exc)
+
+    @app.post("/recipes/{recipe_id}/reject")
+    def reject_recipe(recipe_id: str, request: RejectRequest, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.reject_recipe(user, recipe_id, request.reason).to_dict()
+        except (PermissionDenied, NotFound, ValueError) as exc:
+            raise _http_error(exc)
+
+    @app.post("/recipes/{recipe_id}/obsolete")
+    def obsolete_recipe(recipe_id: str, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.obsolete_recipe(user, recipe_id).to_dict()
+        except (PermissionDenied, NotFound, ValueError) as exc:
+            raise _http_error(exc)
+
+    @app.post("/recipes/{recipe_id}/assign")
+    def assign_recipe(recipe_id: str, request: AssignRecipeRequest, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.assign_recipe(user, recipe_id, request.column_ids)
+        except (PermissionDenied, NotFound, ValueError) as exc:
             raise _http_error(exc)
 
     @app.get("/campaigns")
@@ -272,10 +386,52 @@ def create_app(
         except (PermissionDenied, NotFound, ValueError) as exc:
             raise _http_error(exc)
 
+    @app.get("/campaigns/compare")
+    def compare_campaigns(left_id: str, right_id: str, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.compare_campaigns(user, left_id, right_id)
+        except (PermissionDenied, NotFound) as exc:
+            raise _http_error(exc)
+
+    @app.get("/campaigns/{campaign_id}/export")
+    def export_campaign(campaign_id: str, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.export_campaign(user, campaign_id)
+        except (PermissionDenied, NotFound) as exc:
+            raise _http_error(exc)
+
+    @app.post("/campaigns/{campaign_id}/schedule")
+    def schedule_campaign(campaign_id: str, request: CampaignScheduleRequest, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.schedule_campaign(user, campaign_id, request.scheduled_start).to_dict()
+        except (PermissionDenied, NotFound, ValueError) as exc:
+            raise _http_error(exc)
+
     @app.post("/campaigns/{campaign_id}/start")
     def start_campaign(campaign_id: str, user=Depends(current_user)) -> dict[str, Any]:
         try:
             return store.start_campaign(user, campaign_id).to_dict()
+        except (PermissionDenied, NotFound, ValueError) as exc:
+            raise _http_error(exc)
+
+    @app.post("/campaigns/{campaign_id}/pause")
+    def pause_campaign(campaign_id: str, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.pause_campaign(user, campaign_id).to_dict()
+        except (PermissionDenied, NotFound, ValueError) as exc:
+            raise _http_error(exc)
+
+    @app.post("/campaigns/{campaign_id}/finish")
+    def finish_campaign(campaign_id: str, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.finalize_campaign(user, campaign_id).to_dict()
+        except (PermissionDenied, NotFound, ValueError) as exc:
+            raise _http_error(exc)
+
+    @app.post("/campaigns/{campaign_id}/cancel")
+    def cancel_campaign(campaign_id: str, request: CampaignCancelRequest, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.cancel_campaign(user, campaign_id, request.reason).to_dict()
         except (PermissionDenied, NotFound, ValueError) as exc:
             raise _http_error(exc)
 
@@ -287,10 +443,55 @@ def create_app(
             items = [item for item in items if item.active is active]
         return [item.to_dict() for item in items]
 
-    @app.post("/alarms/{alarm_id}/ack")
-    def acknowledge_alarm(alarm_id: str, user=Depends(current_user)) -> dict[str, Any]:
+    @app.get("/alarms/export")
+    def export_alarms(active: bool | None = None, user=Depends(current_user)) -> dict[str, Any]:
         try:
-            return store.acknowledge_alarm(user, alarm_id).to_dict()
+            return store.export_alarms(user, active)
+        except PermissionDenied as exc:
+            raise _http_error(exc)
+
+    @app.get("/alarm-history")
+    def alarm_history(user=Depends(current_user)) -> list[dict[str, Any]]:
+        store.require_permission(user, "alarms.read")
+        return [item.to_dict() for item in store.alarm_history]
+
+    @app.get("/alarm-rules")
+    def alarm_rules(user=Depends(current_user)) -> list[dict[str, Any]]:
+        store.require_permission(user, "alarms.read")
+        return [item.to_dict() for item in store.alarm_rules.values()]
+
+    @app.post("/alarm-rules")
+    def create_alarm_rule(request: AlarmRuleRequest, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.create_alarm_rule(user, _model_dump(request)).to_dict()
+        except (PermissionDenied, NotFound, ValueError) as exc:
+            raise _http_error(exc)
+
+    @app.patch("/alarm-rules/{rule_id}")
+    def update_alarm_rule(rule_id: str, request: AlarmRuleUpdateRequest, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.update_alarm_rule(user, rule_id, _model_dump(request)).to_dict()
+        except (PermissionDenied, NotFound, ValueError) as exc:
+            raise _http_error(exc)
+
+    @app.post("/alarm-rules/evaluate")
+    def evaluate_alarm_rules(user=Depends(current_user)) -> list[dict[str, Any]]:
+        try:
+            return [alarm.to_dict() for alarm in store.evaluate_alarm_rules(user)]
+        except (PermissionDenied, ValueError) as exc:
+            raise _http_error(exc)
+
+    @app.post("/alarms/{alarm_id}/ack")
+    def acknowledge_alarm(alarm_id: str, request: AlarmActionRequest | None = None, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.acknowledge_alarm(user, alarm_id, request.comment if request else "").to_dict()
+        except (PermissionDenied, NotFound) as exc:
+            raise _http_error(exc)
+
+    @app.post("/alarms/{alarm_id}/clear")
+    def clear_alarm(alarm_id: str, request: AlarmActionRequest | None = None, user=Depends(current_user)) -> dict[str, Any]:
+        try:
+            return store.clear_alarm(user, alarm_id, request.comment if request else "").to_dict()
         except (PermissionDenied, NotFound) as exc:
             raise _http_error(exc)
 

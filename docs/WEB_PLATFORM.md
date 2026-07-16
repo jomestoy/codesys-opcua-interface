@@ -1,4 +1,4 @@
-# Plataforma web — Hito 4
+# Plataforma web — Hitos 4 y 5
 
 Estado: prototipo funcional offline con API FastAPI y fuente React/Vite. No es aun despliegue productivo.
 
@@ -24,12 +24,31 @@ Endpoints principales:
 - `POST /commands`
 - `GET /recipes`
 - `POST /recipes`
+- `GET /recipes/compare`
+- `PATCH /recipes/{recipe_id}`
+- `POST /recipes/{recipe_id}/clone`
 - `POST /recipes/{recipe_id}/approve`
+- `POST /recipes/{recipe_id}/reject`
+- `POST /recipes/{recipe_id}/obsolete`
+- `POST /recipes/{recipe_id}/assign`
 - `GET /campaigns`
 - `POST /campaigns`
+- `GET /campaigns/compare`
+- `GET /campaigns/{campaign_id}/export`
+- `POST /campaigns/{campaign_id}/schedule`
 - `POST /campaigns/{campaign_id}/start`
+- `POST /campaigns/{campaign_id}/pause`
+- `POST /campaigns/{campaign_id}/finish`
+- `POST /campaigns/{campaign_id}/cancel`
 - `GET /alarms`
 - `POST /alarms/{alarm_id}/ack`
+- `POST /alarms/{alarm_id}/clear`
+- `GET /alarms/export`
+- `GET /alarm-rules`
+- `POST /alarm-rules`
+- `PATCH /alarm-rules/{rule_id}`
+- `POST /alarm-rules/evaluate`
+- `GET /alarm-history`
 - `GET /audit`
 - `WS /ws/summary`
 
@@ -50,7 +69,7 @@ Pantallas implementadas:
 - detalle de columna;
 - recetas;
 - campanas;
-- alarmas;
+- alarmas y reglas de alarma;
 - usuarios;
 - auditoria.
 
@@ -74,6 +93,7 @@ Pantallas implementadas:
 - mantenimiento;
 - reportes;
 - configuraciones.
+- reglas e historial de alarmas.
 
 La API Hito 4 usa store en memoria para demo y pruebas. PostgreSQL + SQLAlchemy/Alembic real queda pendiente para el siguiente tramo de plataforma.
 
@@ -81,7 +101,7 @@ La API Hito 4 usa store en memoria para demo y pruebas. PostgreSQL + SQLAlchemy/
 
 ```text
 python -m pytest -q
-32 passed
+36 passed
 python -m compileall codesys_opcua_interface services tests
 OK
 ```

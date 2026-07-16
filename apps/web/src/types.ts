@@ -59,7 +59,13 @@ export type Recipe = {
   temperature_setpoint_c: number;
   aeration_enabled: boolean;
   created_by: string;
+  base_recipe_id?: string | null;
+  change_note: string;
   approved_by?: string | null;
+  approved_at?: string | null;
+  rejected_by?: string | null;
+  rejected_reason: string;
+  obsoleted_by?: string | null;
 };
 
 export type Campaign = {
@@ -69,6 +75,12 @@ export type Campaign = {
   recipe_id: string;
   column_ids: number[];
   created_by: string;
+  scheduled_start?: string | null;
+  started_at?: string | null;
+  paused_at?: string | null;
+  finished_at?: string | null;
+  cancelled_at?: string | null;
+  notes: string;
 };
 
 export type Alarm = {
@@ -80,6 +92,25 @@ export type Alarm = {
   active: boolean;
   acknowledged_by?: string | null;
   acknowledged_at?: string | null;
+  comment: string;
+  source: string;
+};
+
+export type AlarmRule = {
+  id: string;
+  name: string;
+  variable: string;
+  operator: string;
+  threshold: number;
+  hysteresis: number;
+  delay_s: number;
+  priority: string;
+  action: string;
+  target_scope: string;
+  column_ids: number[];
+  enabled: boolean;
+  version: number;
+  created_by: string;
 };
 
 export type AuditEvent = {

@@ -23,8 +23,22 @@ def test_web_source_contains_functional_screens_and_control_flow():
     for label in ["Resumen", "Planta", "Recetas", "Campañas", "Alarmas", "Usuarios", "Auditoría"]:
         assert label in app_source
 
-    for route in ["/auth/login", "/system/summary", "/columns", "/commands", "/recipes", "/campaigns", "/users"]:
+    for route in [
+        "/auth/login",
+        "/system/summary",
+        "/columns",
+        "/commands",
+        "/recipes",
+        "/recipes/compare",
+        "/campaigns",
+        "/alarm-rules",
+        "/alarms/export",
+        "/users",
+    ]:
         assert route in api_source
 
     assert "api.command" in app_source
+    assert "api.cloneRecipe" in app_source
+    assert "api.pauseCampaign" in app_source
+    assert "api.createAlarmRule" in app_source
     assert "REAL_IO_ENABLED" in app_source

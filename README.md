@@ -22,7 +22,7 @@ Estado actual: prototipo offline integrado hasta Hito 4.
 - PLCopen XML preliminar.
 - API FastAPI offline.
 - Usuarios, roles y permisos.
-- Recetas, campanas, alarmas y auditoria.
+- Recetas, campanas, alarmas y auditoria con flujos Hito 5.
 - Frontend React/Vite/MUI como fuente.
 - Migracion SQL inicial ampliada.
 
@@ -36,7 +36,7 @@ python -m compileall codesys_opcua_interface services tests
 Resultado ultimo validado:
 
 ```text
-32 passed
+36 passed
 ```
 
 ## Ejecutar API demo

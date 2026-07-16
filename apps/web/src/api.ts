@@ -1,4 +1,4 @@
-import type { Alarm, AuditEvent, Campaign, Column, Recipe, Summary, User } from "./types";
+import type { Alarm, AlarmRule, AuditEvent, Campaign, Column, Recipe, Summary, User } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -41,13 +41,45 @@ export const api = {
   recipes: (token: string) => request<Recipe[]>("/recipes", token),
   createRecipe: (token: string, payload: Partial<Recipe>) =>
     request<Recipe>("/recipes", token, { method: "POST", body: JSON.stringify(payload) }),
+  updateRecipe: (token: string, id: string, payload: Partial<Recipe>) =>
+    request<Recipe>(`/recipes/${id}`, token, { method: "PATCH", body: JSON.stringify(payload) }),
+  cloneRecipe: (token: string, id: string, payload: { name?: string; change_note?: string }) =>
+    request<Recipe>(`/recipes/${id}/clone`, token, { method: "POST", body: JSON.stringify(payload) }),
   approveRecipe: (token: string, id: string) => request<Recipe>(`/recipes/${id}/approve`, token, { method: "POST" }),
+  rejectRecipe: (token: string, id: string, reason: string) =>
+    request<Recipe>(`/recipes/${id}/reject`, token, { method: "POST", body: JSON.stringify({ reason }) }),
+  obsoleteRecipe: (token: string, id: string) => request<Recipe>(`/recipes/${id}/obsolete`, token, { method: "POST" }),
+  assignRecipe: (token: string, id: string, columnIds: number[]) =>
+    request<{ recipe_id: string; column_ids: number[] }>(`/recipes/${id}/assign`, token, {
+      method: "POST",
+      body: JSON.stringify({ column_ids: columnIds })
+    }),
+  compareRecipes: (token: string, leftId: string, rightId: string) =>
+    request<Record<string, unknown>>(`/recipes/compare?left_id=${leftId}&right_id=${rightId}`, token),
   campaigns: (token: string) => request<Campaign[]>("/campaigns", token),
   createCampaign: (token: string, payload: { name: string; recipe_id: string; column_ids: number[] }) =>
     request<Campaign>("/campaigns", token, { method: "POST", body: JSON.stringify(payload) }),
+  scheduleCampaign: (token: string, id: string, scheduledStart: string | null) =>
+    request<Campaign>(`/campaigns/${id}/schedule`, token, {
+      method: "POST",
+      body: JSON.stringify({ scheduled_start: scheduledStart })
+    }),
   startCampaign: (token: string, id: string) => request<Campaign>(`/campaigns/${id}/start`, token, { method: "POST" }),
+  pauseCampaign: (token: string, id: string) => request<Campaign>(`/campaigns/${id}/pause`, token, { method: "POST" }),
+  finishCampaign: (token: string, id: string) => request<Campaign>(`/campaigns/${id}/finish`, token, { method: "POST" }),
+  cancelCampaign: (token: string, id: string, reason: string) =>
+    request<Campaign>(`/campaigns/${id}/cancel`, token, { method: "POST", body: JSON.stringify({ reason }) }),
+  exportCampaign: (token: string, id: string) => request<Record<string, unknown>>(`/campaigns/${id}/export`, token),
   alarms: (token: string) => request<Alarm[]>("/alarms", token),
-  ackAlarm: (token: string, id: string) => request<Alarm>(`/alarms/${id}/ack`, token, { method: "POST" }),
+  ackAlarm: (token: string, id: string, comment = "") =>
+    request<Alarm>(`/alarms/${id}/ack`, token, { method: "POST", body: JSON.stringify({ comment }) }),
+  clearAlarm: (token: string, id: string, comment = "") =>
+    request<Alarm>(`/alarms/${id}/clear`, token, { method: "POST", body: JSON.stringify({ comment }) }),
+  alarmRules: (token: string) => request<AlarmRule[]>("/alarm-rules", token),
+  createAlarmRule: (token: string, payload: Partial<AlarmRule>) =>
+    request<AlarmRule>("/alarm-rules", token, { method: "POST", body: JSON.stringify(payload) }),
+  evaluateAlarmRules: (token: string) => request<Alarm[]>("/alarm-rules/evaluate", token, { method: "POST" }),
+  exportAlarms: (token: string) => request<Record<string, unknown>>("/alarms/export", token),
   audit: (token: string) => request<AuditEvent[]>("/audit", token),
   users: (token: string) => request<User[]>("/users", token),
   createUser: (token: string, payload: { username: string; display_name: string; role_id: string; temporary_password: string }) =>

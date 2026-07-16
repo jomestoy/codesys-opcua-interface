@@ -48,7 +48,13 @@ CREATE TABLE IF NOT EXISTS recipes (
   temperature_setpoint_c NUMERIC NOT NULL,
   aeration_enabled BOOLEAN NOT NULL DEFAULT true,
   created_by TEXT NOT NULL,
+  base_recipe_id TEXT,
+  change_note TEXT NOT NULL DEFAULT '',
   approved_by TEXT,
+  approved_at TIMESTAMPTZ,
+  rejected_by TEXT,
+  rejected_reason TEXT NOT NULL DEFAULT '',
+  obsoleted_by TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (name, version)
 );
@@ -60,8 +66,12 @@ CREATE TABLE IF NOT EXISTS campaigns (
   recipe_id TEXT NOT NULL REFERENCES recipes(id),
   column_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
   created_by TEXT NOT NULL,
+  scheduled_start TIMESTAMPTZ,
   started_at TIMESTAMPTZ,
+  paused_at TIMESTAMPTZ,
   finished_at TIMESTAMPTZ,
+  cancelled_at TIMESTAMPTZ,
+  notes TEXT NOT NULL DEFAULT '',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -88,7 +98,37 @@ CREATE TABLE IF NOT EXISTS alarms (
   active BOOLEAN NOT NULL DEFAULT true,
   acknowledged_by TEXT,
   acknowledged_at TIMESTAMPTZ,
+  comment TEXT NOT NULL DEFAULT '',
+  source TEXT NOT NULL DEFAULT 'application',
+  cleared_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS alarm_rules (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  variable TEXT NOT NULL,
+  operator TEXT NOT NULL,
+  threshold NUMERIC NOT NULL,
+  hysteresis NUMERIC NOT NULL DEFAULT 0,
+  delay_s INTEGER NOT NULL DEFAULT 0,
+  priority TEXT NOT NULL,
+  action TEXT NOT NULL,
+  target_scope TEXT NOT NULL,
+  column_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  enabled BOOLEAN NOT NULL DEFAULT true,
+  version INTEGER NOT NULL DEFAULT 1,
+  created_by TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS alarm_history (
+  id BIGSERIAL PRIMARY KEY,
+  alarm_id TEXT NOT NULL REFERENCES alarms(id),
+  username TEXT NOT NULL,
+  action TEXT NOT NULL,
+  comment TEXT NOT NULL DEFAULT '',
+  event_time TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS audit_events (

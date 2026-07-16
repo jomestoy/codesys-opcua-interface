@@ -110,6 +110,12 @@ Pruebas ejecutadas despues de Hito 4:
 32 passed
 ```
 
+Pruebas ejecutadas despues de Hito 5:
+
+```text
+36 passed
+```
+
 Demo ejecutada:
 
 ```text
@@ -142,6 +148,15 @@ Estado Hito 4:
 - migracion SQL ampliada para modelos principales;
 - PostgreSQL/SQLAlchemy/Alembic reales siguen pendientes;
 - frontend no compilado por falta de dependencias Node instaladas en el ambiente.
+
+Estado Hito 5:
+
+- recetas con crear, editar borrador, clonar, aprobar, rechazar, obsoletar, comparar y asignar columnas;
+- campanas con crear, programar, iniciar, pausar, finalizar, cancelar, comparar y exportar;
+- alarmas configurables por reglas con variable, operador, umbral, histeresis, retardo, prioridad, accion, alcance y version;
+- historial de alarmas, reconocimiento con comentario, limpieza y exportacion;
+- API y fuente frontend actualizadas para estas acciones;
+- todo sigue operando offline/simulacion; CODESYS real y PostgreSQL real siguen pendientes.
 
 ### Gateway
 
